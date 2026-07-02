@@ -145,6 +145,11 @@ impl HedgePayBatch {
             &env.current_contract_address(),
             &request.declared_total,
         );
+
+        // Distribute tokens to individual payees
+        for item in request.items.iter() {
+            token_client.transfer(&item.payee, &item.amount);
+        }
     }
 }
 
