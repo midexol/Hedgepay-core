@@ -209,4 +209,7 @@ fn set_batch_counter(env: &Env, counter: u64) {
     env.storage().persistent().set(&DataKey::BatchCounter, &counter);
 }
 
+#[cfg(test)]
+mod test;
+
 
