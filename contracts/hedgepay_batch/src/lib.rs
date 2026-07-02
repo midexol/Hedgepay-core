@@ -54,3 +54,44 @@ impl HedgePayBatch {
     }
 }
 
+fn get_admin(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKey::Admin)
+}
+
+fn set_admin(env: &Env, admin: &Address) {
+    env.storage().instance().set(&DataKey::Admin, admin);
+}
+
+fn get_treasury(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKey::Treasury)
+}
+
+fn set_treasury(env: &Env, treasury: &Address) {
+    env.storage().instance().set(&DataKey::Treasury, treasury);
+}
+
+fn get_token(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKey::Token)
+}
+
+fn set_token(env: &Env, token: &Address) {
+    env.storage().instance().set(&DataKey::Token, token);
+}
+
+fn get_max_batch_size(env: &Env) -> u32 {
+    env.storage().instance().get(&DataKey::MaxBatchSize).unwrap_or(50)
+}
+
+fn set_max_batch_size(env: &Env, size: u32) {
+    env.storage().instance().set(&DataKey::MaxBatchSize, &size);
+}
+
+fn get_batch_counter(env: &Env) -> u64 {
+    env.storage().persistent().get(&DataKey::BatchCounter).unwrap_or(0)
+}
+
+fn set_batch_counter(env: &Env, counter: u64) {
+    env.storage().persistent().set(&DataKey::BatchCounter, &counter);
+}
+
+
