@@ -105,7 +105,14 @@ impl HedgePayBatch {
     }
 
     pub fn execute_batch_payroll(env: Env, request: BatchRequest) {
-        // empty skeleton for now
+        let max_size = get_max_batch_size(&env);
+        let len = request.items.len();
+        if len == 0 {
+            panic_with_error!(&env, Error::EmptyBatch);
+        }
+        if len > max_size {
+            panic_with_error!(&env, Error::BatchSizeExceeded);
+        }
     }
 }
 
