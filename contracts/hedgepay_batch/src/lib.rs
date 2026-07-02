@@ -95,6 +95,14 @@ impl HedgePayBatch {
         admin.require_auth();
         set_treasury(&env, &new_treasury);
     }
+
+    pub fn update_max_batch(env: Env, new_max: u32) {
+        let admin = get_admin(&env).unwrap_or_else(|| {
+            panic_with_error!(&env, Error::NotInitialized);
+        });
+        admin.require_auth();
+        set_max_batch_size(&env, new_max);
+    }
 }
 
 fn get_admin(env: &Env) -> Option<Address> {
