@@ -103,6 +103,10 @@ impl HedgePayBatch {
         admin.require_auth();
         set_max_batch_size(&env, new_max);
     }
+
+    pub fn execute_batch_payroll(env: Env, request: BatchRequest) {
+        // empty skeleton for now
+    }
 }
 
 fn get_admin(env: &Env) -> Option<Address> {
