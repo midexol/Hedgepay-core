@@ -41,3 +41,46 @@ fn setup_test_context() -> TestContext {
         contract_client,
     }
 }
+
+#[test]
+fn test_successful_batch_payout() {
+    let ctx = setup_test_context();
+
+    let payee1 = Address::generate(&ctx.env);
+    let payee2 = Address::generate(&ctx.env);
+
+    // Mint tokens to treasury
+    ctx.token_admin_client.mint(&ctx.treasury, &1000);
+    assert_eq!(ctx.token_client.balance(&ctx.treasury), 1000);
+
+    // Create batch items
+    let mut items = Vec::new(&ctx.env);
+    items.push_back(PayoutItem {
+        payee: payee1.clone(),
+        amount: 300,
+        department: symbol_short!("ENG"),
+    });
+    items.push_back(PayoutItem {
+        payee: payee2.clone(),
+        amount: 700,
+        department: symbol_short!("HR"),
+    });
+
+    let request = BatchRequest {
+        items,
+        declared_total: 1000,
+        batch_id: 1,
+    };
+
+    // Execute batch
+    ctx.contract_client.execute_batch_payroll(&request);
+
+    // Verify balances
+    assert_eq!(ctx.token_client.balance(&ctx.treasury), 0);
+    assert_eq!(ctx.token_client.balance(&payee1), 300);
+    assert_eq!(ctx.token_client.balance(&payee2), 700);
+
+    // Verify batch counter incremented
+    assert_eq!(ctx.contract_client.batch_counter(), 1);
+}
+
