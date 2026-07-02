@@ -50,7 +50,14 @@ pub struct HedgePayBatch;
 #[contractimpl]
 impl HedgePayBatch {
     pub fn initialize(env: Env, admin: Address, treasury: Address, token: Address) {
-        // empty skeleton for now
+        if get_admin(&env).is_some() {
+            panic_with_error!(&env, Error::AlreadyInitialized);
+        }
+        set_admin(&env, &admin);
+        set_treasury(&env, &treasury);
+        set_token(&env, &token);
+        set_max_batch_size(&env, 50);
+        set_batch_counter(&env, 0);
     }
 }
 
