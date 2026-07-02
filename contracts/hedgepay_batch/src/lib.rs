@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, contracterror, symbol_short, Address, Env, Symbol, Vec, panic_with_error};
+use soroban_sdk::{contract, contractimpl, contracttype, contracterror, symbol_short, Address, Env, Symbol, Vec, panic_with_error, token::Client as TokenClient};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -127,6 +127,24 @@ impl HedgePayBatch {
         if computed_sum != request.declared_total {
             panic_with_error!(&env, Error::SumMismatch);
         }
+
+        let token_addr = get_token(&env).unwrap_or_else(|| {
+            panic_with_error!(&env, Error::NotInitialized);
+        });
+        let treasury = get_treasury(&env).unwrap_or_else(|| {
+            panic_with_error!(&env, Error::NotInitialized);
+        });
+
+        // Treasury authorization is required to pull the total payroll sum
+        treasury.require_auth();
+
+        let token_client = TokenClient::new(&env, &token_addr);
+        token_client.transfer_from(
+            &env.current_contract_address(),
+            &treasury,
+            &env.current_contract_address(),
+            &request.declared_total,
+        );
     }
 }
 
