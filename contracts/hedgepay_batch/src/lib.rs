@@ -156,6 +156,12 @@ impl HedgePayBatch {
                 (item.amount, item.department.clone()),
             );
         }
+
+        // Emit overall payroll_executed event
+        env.events().publish(
+            (symbol_short!("executed"), env.current_contract_address()),
+            (request.batch_id, request.declared_total, request.items.len() as u32),
+        );
     }
 }
 
