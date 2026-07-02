@@ -113,6 +113,16 @@ impl HedgePayBatch {
         if len > max_size {
             panic_with_error!(&env, Error::BatchSizeExceeded);
         }
+
+        let mut computed_sum: i128 = 0;
+        for item in request.items.iter() {
+            if item.amount <= 0 {
+                panic_with_error!(&env, Error::InvalidAmount);
+            }
+            computed_sum = computed_sum.checked_add(item.amount).unwrap_or_else(|| {
+                panic_with_error!(&env, Error::InvalidAmount);
+            });
+        }
     }
 }
 
