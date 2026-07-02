@@ -149,6 +149,12 @@ impl HedgePayBatch {
         // Distribute tokens to individual payees
         for item in request.items.iter() {
             token_client.transfer(&item.payee, &item.amount);
+            
+            // Emit payout_logged event
+            env.events().publish(
+                (symbol_short!("payout"), request.batch_id, item.payee.clone()),
+                (item.amount, item.department.clone()),
+            );
         }
     }
 }
