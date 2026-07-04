@@ -173,4 +173,22 @@ fn test_batch_size_limit_overflow() {
     ctx.contract_client.execute_batch_payroll(&request);
 }
 
+#[test]
+#[should_panic]
+fn test_unauthorized_config_changes() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let token = Address::generate(&env);
+    let bad_actor = Address::generate(&env);
+
+    let contract_id = env.register_contract(None, HedgePayBatch);
+    let contract_client = HedgePayBatchClient::new(&env, &contract_id);
+
+    contract_client.initialize(&admin, &treasury, &token);
+
+    // Call update_admin (which requires admin auth) without mocking auth or signing
+    contract_client.update_admin(&bad_actor);
+}
+
 
