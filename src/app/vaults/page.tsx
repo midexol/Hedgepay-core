@@ -73,7 +73,7 @@ export default function HarborVaults() {
   const splitOfframp = 100 - splitYield;
 
   return (
-    <div style={{ maxWidth: '980px', position: 'relative' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', position: 'relative' }}>
       
       {/* Top Header */}
       <div style={{ marginBottom: '40px' }}>
@@ -119,30 +119,112 @@ export default function HarborVaults() {
         </div>
       )}
 
-      {/* 1. Empty State (Before Vault Initialization) */}
+      {/* 1. Improved Empty State (Before Vault Initialization) */}
       {!vaultInitialized && (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '60px 40px', borderStyle: 'dashed', maxWidth: '680px', margin: '0 auto' }}>
-          <div style={{ fontSize: '36px', color: 'var(--color-gold)', marginBottom: '16px' }}>🏦</div>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Stellar Yield Vault Not Deployed</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '440px', margin: '0 auto 24px', lineHeight: '1.6' }}>
-            To start earning 5.4% APY interest on your USD reserves, you must deploy an interest-bearing escrow account on the Stellar network.
-          </p>
-          <button 
-            className="btn btn-action" 
-            onClick={handleInitialize}
-            disabled={initializing}
-            style={{ minWidth: '180px' }}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center' }}>
+          <div 
+            className="glass-panel" 
+            style={{ 
+              textAlign: 'center', 
+              padding: '48px 32px', 
+              maxWidth: '680px', 
+              width: '100%',
+              margin: '0 auto',
+              background: 'radial-gradient(rgba(197, 160, 89, 0.03) 1px, transparent 1px), var(--bg-panel)',
+              backgroundSize: '16px 16px',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-lg)'
+            }}
           >
-            {initializing ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ animation: 'spin 1s linear infinite' }}>
-                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)"></circle>
-                  <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor"></path>
-                </svg>
-                Deploying Contract...
+            <div style={{ fontSize: '32px', color: 'var(--color-gold)', marginBottom: '16px' }}>🏦</div>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Stellar Yield Vault Not Deployed</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '440px', margin: '0 auto 28px', lineHeight: '1.6' }}>
+              To start earning 5.4% APY interest on your USD reserves, you must deploy an interest-bearing escrow account on the Stellar network.
+            </p>
+
+            {/* 3-Step visual pipeline diagram */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              gap: '16px', 
+              margin: '0 auto 32px', 
+              maxWidth: '480px',
+              background: 'rgba(15, 30, 54, 0.02)',
+              padding: '16px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-light)'
+            }}>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', display: 'block' }}>USD Reserves</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>Client ACH</span>
               </div>
-            ) : "Initialize Escrow Vault"}
-          </button>
+              <span style={{ color: 'var(--color-gold)', fontWeight: 'bold' }}>➔</span>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold-hover)', display: 'block' }}>Escrow Vault</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>On-Chain</span>
+              </div>
+              <span style={{ color: 'var(--color-gold)', fontWeight: 'bold' }}>➔</span>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-success)', display: 'block' }}>5.4% APY</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>Daily Growth</span>
+              </div>
+            </div>
+
+            <button 
+              className="btn btn-action" 
+              onClick={handleInitialize}
+              disabled={initializing}
+              style={{ minWidth: '180px' }}
+            >
+              {initializing ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ animation: 'spin 1s linear infinite' }}>
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.2)"></circle>
+                    <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor"></path>
+                  </svg>
+                  Deploying Contract...
+                </div>
+              ) : "Initialize Escrow Vault"}
+            </button>
+          </div>
+
+          {/* 2-3 Small Stat Chips Below Card */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <span style={{ 
+              fontSize: '11px', 
+              fontWeight: '700', 
+              color: 'var(--color-gold-hover)', 
+              background: 'var(--color-gold-light)', 
+              padding: '6px 12px', 
+              borderRadius: '20px', 
+              border: '1px solid rgba(197, 160, 89, 0.15)' 
+            }}>
+              5.4% APY Variable
+            </span>
+            <span style={{ 
+              fontSize: '11px', 
+              fontWeight: '700', 
+              color: 'var(--text-secondary)', 
+              background: '#f1f5f9', 
+              padding: '6px 12px', 
+              borderRadius: '20px', 
+              border: '1px solid var(--border-light)' 
+            }}>
+              Stellar-Secured Escrow
+            </span>
+            <span style={{ 
+              fontSize: '11px', 
+              fontWeight: '700', 
+              color: 'var(--text-secondary)', 
+              background: '#f1f5f9', 
+              padding: '6px 12px', 
+              borderRadius: '20px', 
+              border: '1px solid var(--border-light)' 
+            }}>
+              Withdraw Anytime
+            </span>
+          </div>
         </div>
       )}
 
