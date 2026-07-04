@@ -66,19 +66,24 @@ npx tsc --noEmit
 
 ## 🗳️ Drips Wave Active Issues List
 
-For the active **Stellar Drips Wave** sprint, contributors can claim the following scoped issues. Each issue corresponds to a specific points multiplier determined by its complexity level:
+For the active **Stellar Drips Wave** sprint, contributors can claim the following scoped protocol engineering issues:
 
-### 1. [TRIVIAL] Clean up React Warnings & Component Lints
-*   **Goal:** Clean up compiler lints, React keys warning logs, and formatting inconsistencies in frontend views.
-*   **Target Files:** `src/app/**/*.tsx`
-*   **Required Skills:** React, CSS, TypeScript.
-
-### 2. [MEDIUM] Add Copy-to-Clipboard Triggers for Account Coordinates
-*   **Goal:** Implement a visual "Copy" button next to the Routing and Account numbers inside the Virtual US Account card on the Overview dashboard. Show a temporary "Copied!" state when clicked.
-*   **Target Files:** `src/app/dashboard/page.tsx`
-*   **Required Skills:** React state, HTML clipboard API.
-
-### 3. [HIGH] Implement Multi-Sig Escrow Payout Support
-*   **Goal:** Modify the Soroban Rust contract to verify payouts sourced from a multi-signature threshold escrow account. Ensure `require_auth` handles multiple signing thresholds before executing payroll sweeps.
+### 1. [HIGH] Integrate DEX Path-Payments for Multi-Asset Splits
+*   **Goal:** Implement a path-payment swap router inside the Soroban Rust contract. When a USD direct deposit is cleared, allow splits to automatically swap a portion to XLM, EURC, or other Stellar-native assets using a path-payment routing swap or AMM interface (like Soroswap) before executing payouts.
 *   **Target Files:** `contracts/hedgepay_batch/src/lib.rs` & `test.rs`
-*   **Required Skills:** Rust, Soroban SDK, cryptography concepts.
+*   **Required Skills:** Rust, AMM protocols, Stellar Path Payments, checked arithmetic.
+
+### 2. [HIGH] Implement Soroban Fee-Sponsorship / Fee-Bump Integration
+*   **Goal:** Allow gasless onboarding for remote contractors by letting Harbor's treasury address sponsor the transaction resources and fees. Construct fee-bump transaction wrappers in the relayer subscriber client.
+*   **Target Files:** `listener/index.js` & `contracts/hedgepay_batch/`
+*   **Required Skills:** Stellar transaction construction, relayer networks, XDR manipulation.
+
+### 3. [HIGH] Defer Payouts against Sanctioned Address Blacklist Oracle
+*   **Goal:** Integrate an on-chain compliance blacklist verification filter. Query an administrative blacklist map or a compliance oracle contract to assert that target payout addresses are unrestricted before executing payouts.
+*   **Target Files:** `contracts/hedgepay_batch/src/lib.rs`
+*   **Required Skills:** Rust, Oracle integration, role access controls.
+
+### 4. [MEDIUM] Support Offline Transaction Envelope Signing
+*   **Goal:** Allow administrative coordinators to authorize batch payroll runs offline. The admin signs the hash of the batch transactions payload locally, producing an Ed25519 signature that a relayer submits to the smart contract.
+*   **Target Files:** `contracts/hedgepay_batch/src/lib.rs` & `test.rs`
+*   **Required Skills:** Ed25519 signature verification on-chain, Soroban cryptography APIs.
