@@ -148,4 +148,29 @@ fn test_empty_batch() {
     ctx.contract_client.execute_batch_payroll(&request);
 }
 
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #6)")]
+fn test_batch_size_limit_overflow() {
+    let ctx = setup_test_context();
+
+    let payee = Address::generate(&ctx.env);
+    let mut items = Vec::new(&ctx.env);
+
+    for _ in 0..51 {
+        items.push_back(PayoutItem {
+            payee: payee.clone(),
+            amount: 10,
+            department: symbol_short!("ENG"),
+        });
+    }
+
+    let request = BatchRequest {
+        items,
+        declared_total: 510,
+        batch_id: 1,
+    };
+
+    ctx.contract_client.execute_batch_payroll(&request);
+}
+
 
