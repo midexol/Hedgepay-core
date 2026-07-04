@@ -64,10 +64,13 @@ export default function CsvUpload({ onParsed, onError }: CsvUploadProps) {
       const amountRaw = cols[amountIdx];
       const department = cols[deptIdx];
 
-      // Stellar address validation
+      // Stellar address, email, or Federation ID validation
       const addressRegex = /^G[A-Z2-7]{55}$/;
-      if (!addressRegex.test(walletAddress)) {
-        errors.push(`Row ${i + 1}: Invalid Stellar Address "${walletAddress}"`);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const fedRegex = /^[a-zA-Z0-9._%+-]+\*[\w.-]+$/;
+
+      if (!addressRegex.test(walletAddress) && !emailRegex.test(walletAddress) && !fedRegex.test(walletAddress)) {
+        errors.push(`Row ${i + 1}: Invalid address or identifier "${walletAddress}"`);
         continue;
       }
 
