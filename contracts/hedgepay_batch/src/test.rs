@@ -84,3 +84,28 @@ fn test_successful_batch_payout() {
     assert_eq!(ctx.contract_client.batch_counter(), 1);
 }
 
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
+fn test_sum_mismatch_too_high() {
+    let ctx = setup_test_context();
+
+    let payee1 = Address::generate(&ctx.env);
+    ctx.token_admin_client.mint(&ctx.treasury, &1000);
+
+    let mut items = Vec::new(&ctx.env);
+    items.push_back(PayoutItem {
+        payee: payee1,
+        amount: 1000,
+        department: symbol_short!("ENG"),
+    });
+
+    let request = BatchRequest {
+        items,
+        declared_total: 1100, // Too high
+        batch_id: 1,
+    };
+
+    ctx.contract_client.execute_batch_payroll(&request);
+}
+
+
