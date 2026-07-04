@@ -108,4 +108,28 @@ fn test_sum_mismatch_too_high() {
     ctx.contract_client.execute_batch_payroll(&request);
 }
 
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
+fn test_sum_mismatch_too_low() {
+    let ctx = setup_test_context();
+
+    let payee1 = Address::generate(&ctx.env);
+    ctx.token_admin_client.mint(&ctx.treasury, &1000);
+
+    let mut items = Vec::new(&ctx.env);
+    items.push_back(PayoutItem {
+        payee: payee1,
+        amount: 1000,
+        department: symbol_short!("ENG"),
+    });
+
+    let request = BatchRequest {
+        items,
+        declared_total: 900, // Too low
+        batch_id: 1,
+    };
+
+    ctx.contract_client.execute_batch_payroll(&request);
+}
+
 
