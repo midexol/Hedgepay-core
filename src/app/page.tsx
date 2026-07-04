@@ -1,479 +1,466 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { isConnected, getPublicKey, signTransaction } from '@stellar/freighter-api';
-import { 
-  nativeToScVal, 
-  Address, 
-  Contract, 
-  TransactionBuilder, 
-  Networks, 
-  xdr, 
-  rpc,
-  TimeoutInfinite
-} from '@stellar/stellar-sdk';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-const TESTNET_RPC = "https://soroban-testnet.stellar.org";
-const TESTNET_PASSPHRASE = Networks.TESTNET;
-
-interface ActivityLog {
-  id: string;
-  type: 'incoming_ach' | 'tokenization' | 'offramp_payout';
-  amount: number;
-  description: string;
-  status: 'PENDING' | 'COMPLETE' | 'FAILED';
-  txHash?: string;
-  timestamp: string;
-}
-
-export default function HarborDashboard() {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [publicKey, setPublicKey] = useState("");
-  const [contractId, setContractId] = useState("CD4U2T3X5K7G2J6L4A8B9Z1Y0W_MOCK_CONTRACT_ID");
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
-  const [txHash, setTxHash] = useState("");
+export default function HarborLanding() {
+  // Animated Count-Up state for Fee Leakage comparison
+  const [lossAmount, setLossAmount] = useState(0);
+  const [harborAmount, setHarborAmount] = useState(0);
   
-  // Interactive Simulation Sandbox State
-  const [incomingAmount, setIncomingAmount] = useState("1200");
-  const [selectedCorridor, setSelectedCorridor] = useState("gcash");
-  const [splitYield, setSplitYield] = useState(20); // % to save in Stellar Yield Vault
-  const [splitOfframp, setSplitOfframp] = useState(80); // % to auto-payout to e-wallet
-  
-  // Dynamic metrics
-  const [totalEarned, setTotalEarned] = useState(3840);
-  const [totalSaved, setTotalSaved] = useState(212.50);
-  const [yieldEarned, setYieldEarned] = useState(14.82);
-  
-  // Activities log
-  const [logs, setLogs] = useState<ActivityLog[]>([
-    {
-      id: "tx-001",
-      type: "incoming_ach",
-      amount: 1500,
-      description: "Incoming ACH Deposit from Upwork Inc.",
-      status: "COMPLETE",
-      timestamp: "2026-07-02T14:32:00Z"
-    },
-    {
-      id: "tx-002",
-      type: "offramp_payout",
-      amount: 1200,
-      description: "Auto-withdrawal to GCash (Philippines)",
-      status: "COMPLETE",
-      txHash: "9642a8b92b6a55dbf2c1a0c8b671a5c6e8f813bf6cd684074ea28b9d6e5a6fd2",
-      timestamp: "2026-07-02T14:32:15Z"
-    }
-  ]);
+  // FAQ accordion state
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
-  // Live yield streaming simulation
-  const [yieldStream, setYieldStream] = useState(14.82);
-  const yieldIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Active step reveal state
+  const [activeStep, setActiveStep] = useState(1);
 
   useEffect(() => {
-    checkConnection();
-    // Simulate streaming micro-yield earnings on the assets held in the vault
-    yieldIntervalRef.current = setInterval(() => {
-      setYieldStream(prev => prev + 0.000021);
-    }, 1000);
+    // Count up animation logic
+    const duration = 2000;
+    const steps = 50;
+    const stepTime = duration / steps;
+    let currentStep = 0;
 
-    return () => {
-      if (yieldIntervalRef.current) clearInterval(yieldIntervalRef.current);
-    };
+    const timer = setInterval(() => {
+      currentStep++;
+      setLossAmount(Math.floor((3600 / steps) * currentStep));
+      setHarborAmount(Math.floor((12 / steps) * currentStep));
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+        setLossAmount(3600);
+        setHarborAmount(12);
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
   }, []);
 
-  const checkConnection = async () => {
-    try {
-      const connected = await isConnected();
-      if (connected) {
-        setWalletConnected(true);
-        const pubKey = await getPublicKey();
-        setPublicKey(pubKey);
-      }
-    } catch (e) {
-      console.error("Wallet connection failed", e);
+  const toggleFaq = (index: number) => {
+    setActiveFaq(activeFaq === index ? null : index);
+  };
+
+  const faqs = [
+    {
+      q: "How does the virtual bank account proxy work?",
+      a: "Harbor generates unique domestic US routing and account coordinates for your profile. When your client or gig platform pays USD into this account via ACH or wire, it is cleared by our banking partner and converted instantly to USDC on Stellar."
+    },
+    {
+      q: "What local cash-out channels are supported?",
+      a: "Currently, we support automated off-ramps directly to GCash and Maya (Philippines), OVO and GoPay (Indonesia), and local bank transfers in Vietnam. More corridors are added continuously."
+    },
+    {
+      q: "Is there any exchange rate markup?",
+      a: "No. Unlike PayPal or Payoneer which hide 3% to 4.5% markup in the exchange rate, Harbor routes funds directly through Stellar liquidity pools at institutional spot rates, taking a flat, transparent 0.15% service fee."
+    },
+    {
+      q: "Do my clients need to install Freighter or understand crypto?",
+      a: "No. Your clients pay you via standard US bank routing numbers just like a normal contractor bank account. The entire Stellar conversion is managed in the background, making web3 onboarding invisible."
     }
-  };
-
-  const connectWallet = async () => {
-    try {
-      const pubKey = await getPublicKey();
-      setPublicKey(pubKey);
-      setWalletConnected(true);
-      setStatus({ type: 'success', message: "Freelancer Wallet connected successfully!" });
-    } catch (e) {
-      setStatus({ type: 'error', message: "Failed to connect Freighter wallet. Make sure it is unlocked." });
-    }
-  };
-
-  const handleSimulateDeposit = async () => {
-    const amount = parseFloat(incomingAmount);
-    if (isNaN(amount) || amount <= 0) {
-      setStatus({ type: 'error', message: "Please input a valid deposit amount." });
-      return;
-    }
-
-    setLoading(true);
-    setStatus({ type: 'info', message: "Employer payment detected via virtual routing... Processing fiat ACH." });
-
-    // Step-by-step pipeline simulation
-    setTimeout(() => {
-      setStatus({ type: 'info', message: "Minting matching USDC on Stellar network (1:1 backing)..." });
-      
-      setTimeout(async () => {
-        // Trigger Soroban contract simulation under the hood
-        try {
-          // If contract is active, we can submit real testnet transaction to execute_batch_payroll
-          // to trigger on-chain events for our listener!
-          if (walletConnected && publicKey && !contractId.includes("MOCK")) {
-            const server = new rpc.Server(TESTNET_RPC);
-            const account = await server.getAccount(publicKey);
-            const contract = new Contract(contractId);
-
-            // Construct single item batch representing the auto-routing payout
-            const offrampAmount = (amount * splitOfframp) / 100;
-            const payoutItemsScVal = [
-              xdr.ScVal.scvMap([
-                new xdr.ScMapEntry({
-                  key: xdr.ScVal.scvSymbol("payee"),
-                  val: new Address(publicKey).toScVal()
-                }),
-                new xdr.ScMapEntry({
-                  key: xdr.ScVal.scvSymbol("amount"),
-                  val: nativeToScVal(BigInt(Math.floor(offrampAmount * 10000000)))
-                }),
-                new xdr.ScMapEntry({
-                  key: xdr.ScVal.scvSymbol("department"),
-                  val: xdr.ScVal.scvSymbol(selectedCorridor.toUpperCase())
-                })
-              ])
-            ];
-
-            const request = xdr.ScVal.scvMap([
-              new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("items"), val: xdr.ScVal.scvVec(payoutItemsScVal) }),
-              new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("declared_total"), val: nativeToScVal(BigInt(Math.floor(offrampAmount * 10000000))) }),
-              new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol("batch_id"), val: xdr.ScVal.scvSymbol(Date.now().toString()) })
-            ]);
-
-            const operation = contract.call("execute_batch_payroll", request);
-            let tx = new TransactionBuilder(account, { fee: "1000", networkPassphrase: TESTNET_PASSPHRASE })
-              .addOperation(operation)
-              .setTimeout(TimeoutInfinite)
-              .build();
-
-            tx = await server.prepareTransaction(tx);
-            const signedTxXdr = await signTransaction(tx.toXDR(), { networkPassphrase: TESTNET_PASSPHRASE });
-            const submitResult = await server.sendTransaction(TransactionBuilder.fromXDR(signedTxXdr, TESTNET_PASSPHRASE));
-            
-            if (submitResult.status === "PENDING") {
-              let response = await server.getTransaction(submitResult.hash);
-              while (response.status === "NOT_FOUND" || response.status === "SUCCESS") {
-                if (response.status === "SUCCESS") {
-                  finalizeSimulation(amount, submitResult.hash);
-                  return;
-                }
-                await new Promise(r => setTimeout(r, 1000));
-                response = await server.getTransaction(submitResult.hash);
-              }
-            }
-          } else {
-            // Mock simulation when contract id is default mock
-            finalizeSimulation(amount, "9642a8b92b6a55dbf2c1a0c8b671a5c6e8f813bf6cd684074ea28b9d6e5a6fd2");
-          }
-        } catch (e: any) {
-          console.error(e);
-          // Auto fall back to simulation mode so reviewers can test easily
-          finalizeSimulation(amount, "9642a8b92b6a55dbf2c1a0c8b671a5c6e8f813bf6cd684074ea28b9d6e5a6fd2");
-        }
-      }, 1500);
-    }, 1500);
-  };
-
-  const finalizeSimulation = (amount: number, hash: string) => {
-    const offrampAmount = (amount * splitOfframp) / 100;
-    const yieldAmount = (amount * splitYield) / 100;
-
-    const newLogs: ActivityLog[] = [
-      {
-        id: `tx-${Date.now()}-1`,
-        type: "incoming_ach",
-        amount: amount,
-        description: `Incoming ACH Deposit from Client`,
-        status: "COMPLETE",
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: `tx-${Date.now()}-2`,
-        type: "offramp_payout",
-        amount: offrampAmount,
-        description: `Auto-routed payout to ${selectedCorridor.toUpperCase()}`,
-        status: "COMPLETE",
-        txHash: hash,
-        timestamp: new Date().toISOString()
-      }
-    ];
-
-    setLogs(prev => [newLogs[1], newLogs[0], ...prev]);
-    setTotalEarned(prev => prev + amount);
-    // Wise charges ~1.2% + $5 conversion, PayPal charges ~4.5%. Harbor saves ~3.5% total
-    setTotalSaved(prev => prev + (amount * 0.035));
-    setLoading(false);
-    setStatus({ 
-      type: 'success', 
-      message: `Simulated transaction complete! Routed $${offrampAmount.toFixed(2)} to ${selectedCorridor.toUpperCase()} and swept $${yieldAmount.toFixed(2)} into your savings vault.`
-    });
-  };
-
-  const handleSplitChange = (val: number) => {
-    setSplitYield(val);
-    setSplitOfframp(100 - val);
-  };
+  ];
 
   return (
-    <div className="container" style={{ paddingBottom: '80px' }}>
-      <div className="cyan-orb"></div>
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)', position: 'relative', overflow: 'hidden' }}>
       
-      <header className="header">
-        <div className="logo">
-          <span style={{ fontSize: '32px', filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.45))' }}>⚓</span> 
-          HARBOR <span style={{ fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 8px', borderRadius: '6px', background: 'rgba(6, 182, 212, 0.08)', color: 'var(--color-cyan)', border: '1px solid rgba(6, 182, 212, 0.15)' }}>USDC bridge</span>
+      {/* Ripple Background Effect */}
+      <div className="ripple-background"></div>
+
+      {/* Nav Bar */}
+      <header style={{ 
+        maxWidth: '1100px', 
+        margin: '0 auto', 
+        height: '90px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        padding: '0 24px',
+        borderBottom: '1px solid var(--border-light)',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ fontWeight: '900', fontSize: '20px', letterSpacing: '1.5px', fontFamily: 'var(--font-display)' }}>
+          HARBOR
         </div>
-        {walletConnected ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Stellar Address: <span style={{ fontFamily: 'monospace', color: 'var(--color-cyan)' }}>{publicKey.slice(0, 5)}...{publicKey.slice(-5)}</span>
-            </span>
-            <button className="btn btn-secondary" onClick={() => { setPublicKey(""); setWalletConnected(false); }}>Disconnect</button>
-          </div>
-        ) : (
-          <button className="btn btn-primary" onClick={connectWallet}>Connect Wallet</button>
-        )}
+        
+        <nav style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+          <a href="#how-it-works" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>How It Works</a>
+          <a href="#pricing" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>Pricing</a>
+          <a href="#faq" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>FAQ</a>
+        </nav>
+
+        <Link href="/auth" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+          Enter Portal
+        </Link>
       </header>
 
-      {/* Main Grid Portal */}
-      <main style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '32px', alignItems: 'start' }}>
+      {/* Hero Section */}
+      <section style={{ 
+        maxWidth: '960px', 
+        margin: '120px auto 100px', 
+        textAlign: 'center', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <span style={{ 
+          fontSize: '11px', 
+          fontWeight: '700', 
+          letterSpacing: '1.5px', 
+          color: 'var(--color-gold)', 
+          textTransform: 'uppercase',
+          background: 'var(--color-gold-light)',
+          padding: '6px 14px',
+          borderRadius: '4px',
+          border: '1px solid rgba(197, 160, 89, 0.15)'
+        }}>
+          Global Salary Infrastructure
+        </span>
         
-        {/* Left Hand Core Dashboard Components */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
-          {/* Status Alert Panels */}
-          {status && (
-            <div className={`alert alert-${status.type}`}>
-              <span>{status.type === 'error' ? '❌' : status.type === 'success' ? '✅' : '⚡'}</span>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '500' }}>{status.message}</p>
-                {txHash && (
-                  <div style={{ marginTop: '8px' }}>
-                    <a 
-                      href={`https://stellar.expert/explorer/testnet/tx/${txHash}`} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      style={{ color: 'var(--color-cyan)', fontWeight: 'bold', textDecoration: 'underline' }}
-                    >
-                      Verify sequence on StellarExplorer
-                    </a>
-                  </div>
-                )}
-              </div>
+        <h1 style={{ 
+          fontFamily: 'var(--font-serif)', 
+          fontWeight: '700', 
+          fontSize: '56px', 
+          lineHeight: '1.15', 
+          color: 'var(--text-primary)', 
+          marginTop: '28px',
+          letterSpacing: '-1px'
+        }}>
+          Stop losing remote earnings<br />
+          to legacy bank markups.
+        </h1>
+        
+        <p style={{ 
+          color: 'var(--text-secondary)', 
+          fontSize: '18px', 
+          maxWidth: '650px', 
+          margin: '24px auto 36px',
+          lineHeight: '1.6',
+          fontFamily: 'var(--font-sans)'
+        }}>
+          Receive standard USD wire deposits. Automatically route your salary onto Stellar USDC, and off-ramp instantly to local channels for near-zero fee leakage.
+        </p>
+
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+          <Link href="/auth" className="btn btn-action" style={{ padding: '14px 28px', fontSize: '14px' }}>
+            Get Started
+          </Link>
+          <a href="#how-it-works" className="btn btn-secondary" style={{ padding: '14px 28px', fontSize: '14px' }}>
+            See how it works
+          </a>
+        </div>
+      </section>
+
+      {/* Corridor Trust Bar */}
+      <div style={{ 
+        maxWidth: '780px', 
+        margin: '0 auto 100px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '16px 24px', 
+        background: 'var(--bg-panel)',
+        borderRadius: '12px',
+        border: '1px solid var(--border-light)',
+        boxShadow: 'var(--shadow-sm)',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>ACTIVE CORRIDORS</span>
+          <div style={{ display: 'flex', gap: '12px', fontSize: '20px' }}>
+            <span>🇵🇭</span>
+            <span>🇮🇩</span>
+            <span>🇻🇳</span>
+            <span>🇳🇬</span>
+          </div>
+        </div>
+        <div style={{ 
+          fontSize: '11px', 
+          fontWeight: '700', 
+          color: 'var(--color-gold-hover)', 
+          background: 'var(--color-gold-light)', 
+          padding: '4px 8px', 
+          borderRadius: '4px',
+          letterSpacing: '0.5px'
+        }}>
+          BUILT ON STELLAR
+        </div>
+      </div>
+
+      {/* Animated Fee Leakage Comparison Widget */}
+      <section style={{ 
+        maxWidth: '1100px', 
+        margin: '0 auto 100px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div className="glass-panel" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '60px', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '32px', fontWeight: '700', marginBottom: '20px', letterSpacing: '-0.5px' }}>
+              Why remote teams are switching
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '24px' }}>
+              Traditional wire transfers and platforms like PayPal eat up to 5% of cross-border salary values in hidden exchange rates and intermediary bank processing costs.
+            </p>
+            <div style={{ borderLeft: '4px solid var(--color-gold)', paddingLeft: '16px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>Framing the loss</span>
+              <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: '600', marginTop: '4px' }}>
+                You lose significant monthly earnings to banking margin layers. Harbor bypasses legacy institutions entirely.
+              </p>
+            </div>
+          </div>
+
+          {/* Count-Up Animation Columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div style={{ padding: '24px', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fee2e2', textAlign: 'center' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-error)', display: 'block', letterSpacing: '0.5px' }}>OLD WAY FEES (YEAR)</span>
+              <span className="cabinet-number" style={{ fontSize: '38px', color: 'var(--color-error)', display: 'block', margin: '8px 0' }}>
+                ${lossAmount}
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Lost to PayPal markup</span>
+            </div>
+            
+            <div style={{ padding: '24px', background: 'var(--color-success-light)', borderRadius: '8px', border: '1px solid #bbf7d0', textAlign: 'center' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-success)', display: 'block', letterSpacing: '0.5px' }}>HARBOR FEES (YEAR)</span>
+              <span className="cabinet-number" style={{ fontSize: '38px', color: 'var(--color-success)', display: 'block', margin: '8px 0' }}>
+                ${harborAmount}
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Network processing</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4-Step Process Section (Visually matching dashboard stepper) */}
+      <section id="how-it-works" style={{ 
+        maxWidth: '1100px', 
+        margin: '0 auto 100px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+            How Harbor Works
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '8px' }}>
+            Select a step below to reveal the transfer pipeline routing sequence.
+          </p>
+        </div>
+
+        {/* Step Selector Pills */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '40px' }}>
+          {[1, 2, 3, 4].map((step) => (
+            <button 
+              key={step}
+              onClick={() => setActiveStep(step)}
+              className={`btn ${activeStep === step ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '8px 20px', fontSize: '13px' }}
+            >
+              Step {step}
+            </button>
+          ))}
+        </div>
+
+        {/* Step Description Card */}
+        <div className="glass-panel" style={{ maxWidth: '680px', margin: '0 auto' }}>
+          {activeStep === 1 && (
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold-hover)', display: 'block', letterSpacing: '0.5px' }}>STEP 1</span>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '8px 0 12px' }}>Payment Detected</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', lineHeight: '1.6' }}>
+                Your client initiates a standard domestic wire or ACH transfer to your Harbor virtual bank account coordinates. The gateway immediately flags the incoming transfer event.
+              </p>
             </div>
           )}
-
-          {/* Virtual US Bank Account Routing Proxy Card */}
-          <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.01) 0%, rgba(99,102,241,0.03) 100%)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <div>
-                <span style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 'bold', letterSpacing: '0.5px' }}>Virtual US Bank Account Details</span>
-                <h3 style={{ fontSize: '22px', fontWeight: '700', fontFamily: 'var(--font-display)', marginTop: '4px' }}>Lumina-Harbor Routing Proxy</h3>
-              </div>
-              <span style={{ fontSize: '24px' }}>🏦</span>
+          {activeStep === 2 && (
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold-hover)', display: 'block', letterSpacing: '0.5px' }}>STEP 2</span>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '8px 0 12px' }}>USDC Minted</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', lineHeight: '1.6' }}>
+                The fiat deposit is cleared and tokenized directly into USDC on the Stellar network (fully backed 1:1 in banking reserves), securing the dollar value instantly.
+              </p>
             </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '20px', background: 'rgba(0,0,0,0.15)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>ROUTING NUMBER</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>021000021</span>
-              </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>ACCOUNT NUMBER</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '14px' }}>1208947653</span>
-              </div>
-              <div>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>ACCOUNT TYPE</span>
-                <span style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-cyan)' }}>ACH / Domestic Wire Proxy</span>
-              </div>
+          )}
+          {activeStep === 3 && (
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold-hover)', display: 'block', letterSpacing: '0.5px' }}>STEP 3</span>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '8px 0 12px' }}>Split Routing</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', lineHeight: '1.6' }}>
+                Harbor evaluates your profile allocation parameters, sweeping a chosen share into your savings vault and routing the rest to local cash-out channels.
+              </p>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '12px' }}>
-              Give this routing detail to your US clients or payroll systems (Upwork, Deel, Gusto). When they pay you via ACH, it hits Harbor, gets converted to USDC on Stellar instantly, and lands in your e-wallet.
-            </p>
-          </div>
-
-          {/* Simulation Sandbox Interactive Panel */}
-          <div className="glass-panel" style={{ border: '1px solid rgba(6, 182, 212, 0.2)' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: 'var(--color-cyan)' }}>Simulate Incoming Payment</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Deposit Amount (USD)</label>
-                <input 
-                  type="text" 
-                  value={incomingAmount} 
-                  onChange={(e) => setIncomingAmount(e.target.value)}
-                  placeholder="e.g. 1500"
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Offramp Destination</label>
-                <select 
-                  value={selectedCorridor}
-                  onChange={(e) => setSelectedCorridor(e.target.value)}
-                  style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '10px 12px', color: 'white', fontSize: '13px', height: '38px' }}
-                >
-                  <option value="gcash">🇵🇭 GCash (Philippines)</option>
-                  <option value="ovo">🇮🇩 OVO (Indonesia)</option>
-                  <option value="local-vn">🇻🇳 Local Bank (Viet Nam)</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <button 
-                  className="btn btn-action" 
-                  style={{ width: '100%', height: '38px', padding: '0 12px' }}
-                  disabled={loading}
-                  onClick={handleSimulateDeposit}
-                >
-                  {loading ? "Processing..." : "Trigger ACH wire"}
-                </button>
-              </div>
+          )}
+          {activeStep === 4 && (
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold-hover)', display: 'block', letterSpacing: '0.5px' }}>STEP 4</span>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '8px 0 12px' }}>Paid Locally</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', lineHeight: '1.6' }}>
+                Stellar anchors disperse the funds directly into your destination local bank account or e-wallet (GCash, OVO, etc.) in local currencies.
+              </p>
             </div>
-          </div>
+          )}
+        </div>
+      </section>
 
-          {/* Activity Log Table */}
-          <div className="glass-panel">
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>Recent Activity</h2>
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Details</th>
-                    <th>Date</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id}>
-                      <td>
-                        <span style={{ fontSize: '18px', marginRight: '8px' }}>
-                          {log.type === 'incoming_ach' ? '💸' : '⚓'}
-                        </span>
-                        <span style={{ fontWeight: '500', fontSize: '13px' }}>
-                          {log.type === 'incoming_ach' ? 'ACH Deposit' : 'Auto Payout'}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        {log.description}
-                        {log.txHash && (
-                          <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                            <a 
-                              href={`https://stellar.expert/explorer/testnet/tx/${log.txHash}`} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              style={{ color: 'var(--color-cyan)', textDecoration: 'underline' }}
-                            >
-                              Tx: {log.txHash.slice(0, 12)}...
-                            </a>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {new Date(log.timestamp).toLocaleDateString()}
-                      </td>
-                      <td style={{ fontWeight: '700', color: log.type === 'incoming_ach' ? 'var(--color-success)' : 'white' }}>
-                        {log.type === 'incoming_ach' ? '+' : '-'}${log.amount.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+      {/* Testimonials section */}
+      <section style={{ 
+        maxWidth: '1100px', 
+        margin: '0 auto 100px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+            Trusted by Remote Professionals
+          </h2>
         </div>
 
-        {/* Right Column Summary, Settings & Yield Streams */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {/* Smart Payout Split Configuration */}
-          <div className="glass-panel" style={{ borderTop: '4px solid var(--color-indigo)' }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Smart Route Allocation</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Yield Savings Vault (USDC)</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--color-indigo)' }}>{splitYield}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={splitYield} 
-                  onChange={(e) => handleSplitChange(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: 'var(--color-indigo)' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', fontSize: '12px' }}>
-                <div>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Save in US Dollars:</span>
-                  <span style={{ fontWeight: 'bold', color: 'white' }}>{splitYield}%</span>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Local Offramp:</span>
-                  <span style={{ fontWeight: 'bold', color: 'var(--color-cyan)' }}>{splitOfframp}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Micro-yield Streaming Vault Card */}
-          <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(6, 182, 212, 0.02) 100%)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ fontSize: '15px', color: 'var(--color-indigo)', fontWeight: 'bold' }}>Stellar Yield Vault</h3>
-              <span className="badge badge-gcash" style={{ fontSize: '9px', background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}>Yield active</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-              <span className="glowing-number" style={{ fontSize: '32px', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #fff 0%, var(--color-indigo) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                ${yieldStream.toFixed(6)}
-              </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>USDC</span>
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-              Accruing 5.2% APY in real-time from on-chain liquidity pools. Swap or withdraw back to your local bank account instantly at any time.
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: '1.6' }}>
+              "Before Harbor, I was losing close to $150 a month to bank conversion spreads. Now my clients pay me via simple wire and the funds arrive in my local wallet within minutes."
             </p>
-          </div>
-
-          {/* Leakage Savings Board */}
-          <div className="glass-panel" style={{ borderLeft: '4px solid var(--color-success)' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>Remittance Savings</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Total Volume:</span>
-                <span style={{ fontWeight: 'bold' }}>${totalEarned.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-light)', paddingTop: '8px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Wise/PayPal Fees Saved:</span>
-                <span style={{ fontWeight: 'bold', color: 'var(--color-success)' }}>${totalSaved.toFixed(2)}</span>
-              </div>
+            <div style={{ marginTop: '20px' }}>
+              <span style={{ fontWeight: '700', fontSize: '14px', display: 'block' }}>Maria Santos</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Contract Engineer, Philippines</span>
             </div>
           </div>
 
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: '1.6' }}>
+              "The ability to automatically split my salary—saving 25% in USDC while off-ramping the rest to my local bank—is amazing. Truly borderless banking."
+            </p>
+            <div style={{ marginTop: '20px' }}>
+              <span style={{ fontWeight: '700', fontSize: '14px', display: 'block' }}>Aditya Prabowo</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Designer, Indonesia</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing comparison section */}
+      <section id="pricing" style={{ 
+        maxWidth: '900px', 
+        margin: '0 auto 100px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+            Transparent Pricing
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '8px' }}>
+            We only make money when you save money. Compare our rates.
+          </p>
         </div>
 
-      </main>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Service Provider</th>
+                <th>Service Fee</th>
+                <th>Exchange Markup</th>
+                <th>Total Cost ($1k payout)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight: '700' }}>Legacy Wire Transfers</td>
+                <td>$35.00</td>
+                <td>2.5% avg</td>
+                <td>$60.00</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: '700' }}>PayPal / Payoneer</td>
+                <td>$2.00</td>
+                <td>3.5% - 4.5%</td>
+                <td>$42.00</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: '700', color: 'var(--color-gold-hover)' }}>Harbor (Stellar)</td>
+                <td style={{ color: 'var(--color-gold-hover)' }}>0.15%</td>
+                <td style={{ color: 'var(--color-gold-hover)' }}>0.00%</td>
+                <td style={{ fontWeight: '700', color: 'var(--color-gold-hover)' }}>$1.50</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <footer className="footer">
-        <p>© 2026 Harbor. All rights reserved. Borderless virtual US bank accounts powered by Stellar.</p>
+      {/* FAQ Accordion Section */}
+      <section id="faq" style={{ 
+        maxWidth: '780px', 
+        margin: '0 auto 120px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {faqs.map((faq, idx) => (
+            <div key={idx} className="glass-panel" style={{ padding: '20px 24px' }}>
+              <button 
+                onClick={() => toggleFaq(idx)}
+                style={{
+                  width: '100%',
+                  background: 'none',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                {faq.q}
+                <span style={{ fontSize: '18px', color: 'var(--color-gold)' }}>
+                  {activeFaq === idx ? '−' : '+'}
+                </span>
+              </button>
+              
+              {activeFaq === idx && (
+                <p style={{ 
+                  color: 'var(--text-secondary)', 
+                  fontSize: '14px', 
+                  marginTop: '12px', 
+                  lineHeight: '1.6',
+                  animation: 'slideDown 0.25s ease'
+                }}>
+                  {faq.a}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ 
+        textAlign: 'center', 
+        padding: '48px 24px', 
+        borderTop: '1px solid var(--border-light)', 
+        fontSize: '13px', 
+        color: 'var(--text-secondary)',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <p>© 2026 Harbor Bank. All rights reserved. Powered by Stellar Soroban Network.</p>
       </footer>
+      
     </div>
   );
 }
