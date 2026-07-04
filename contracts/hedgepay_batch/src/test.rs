@@ -132,4 +132,20 @@ fn test_sum_mismatch_too_low() {
     ctx.contract_client.execute_batch_payroll(&request);
 }
 
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #5)")]
+fn test_empty_batch() {
+    let ctx = setup_test_context();
+
+    let items = Vec::new(&ctx.env);
+
+    let request = BatchRequest {
+        items,
+        declared_total: 0,
+        batch_id: 1,
+    };
+
+    ctx.contract_client.execute_batch_payroll(&request);
+}
+
 
