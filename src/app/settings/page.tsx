@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function HarborSettings() {
   const [profileName, setProfileName] = useState("John Doe");
@@ -23,6 +23,22 @@ export default function HarborSettings() {
   // Confirmation Modals State
   const [activeModal, setActiveModal] = useState<'disconnect' | 'delete' | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedName = localStorage.getItem('harbor_profile_name');
+      if (savedName) {
+        setProfileName(savedName);
+      }
+    }
+  }, []);
+
+  const handleNameChange = (val: string) => {
+    setProfileName(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('harbor_profile_name', val);
+    }
+  };
+
   const handleCopyKey = () => {
     navigator.clipboard.writeText(apiKey);
     setIsCopied(true);
@@ -40,6 +56,15 @@ export default function HarborSettings() {
     alert("Action executed successfully.");
   };
 
+  // Get initials for avatar
+  const getInitials = (nameString: string) => {
+    const parts = nameString.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0] ? parts[0].slice(0, 2).toUpperCase() : "JD";
+  };
+
   return (
     <div style={{ maxWidth: '780px', position: 'relative' }}>
       
@@ -55,14 +80,13 @@ export default function HarborSettings() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
         
-        {/* Profile Section (with Avatar simulation) */}
+        {/* Profile Section */}
         <div className="glass-panel">
           <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: 'var(--text-primary)' }}>
             Profile Details
           </h2>
           
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center', marginBottom: '24px' }}>
-            {/* Avatar block */}
             <div style={{
               width: '64px',
               height: '64px',
@@ -76,7 +100,7 @@ export default function HarborSettings() {
               fontSize: '20px',
               color: 'var(--color-gold-hover)'
             }}>
-              JD
+              {getInitials(profileName)}
             </div>
             <div>
               <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>
@@ -94,7 +118,7 @@ export default function HarborSettings() {
               <input 
                 type="text" 
                 value={profileName} 
-                onChange={(e) => setProfileName(e.target.value)}
+                onChange={(e) => handleNameChange(e.target.value)}
               />
             </div>
             <div>
@@ -108,13 +132,12 @@ export default function HarborSettings() {
           </div>
         </div>
 
-        {/* Security Section (Password & 2FA) */}
+        {/* Security Section */}
         <div className="glass-panel">
           <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: 'var(--text-primary)' }}>
             Security & Authentication
           </h2>
           
-          {/* Two-Factor Authentication Toggle */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid var(--border-light)', marginBottom: '20px' }}>
             <div>
               <span style={{ fontWeight: '600', fontSize: '14.5px', display: 'block' }}>Two-Factor Authentication (2FA)</span>
@@ -128,7 +151,6 @@ export default function HarborSettings() {
             />
           </div>
 
-          {/* Change Password form */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div>
               <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', fontWeight: '600' }}>Current Password</label>
@@ -211,7 +233,7 @@ export default function HarborSettings() {
           </div>
         </div>
 
-        {/* Danger Zone - Visually Separated with Muted-Red Border */}
+        {/* Danger Zone */}
         <div className="glass-panel" style={{ borderColor: '#fca5a5', background: 'rgba(254, 242, 242, 0.4)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px', color: 'var(--color-error)' }}>
             Danger Zone

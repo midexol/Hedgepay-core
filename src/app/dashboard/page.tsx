@@ -16,16 +16,6 @@ import {
 const TESTNET_RPC = "https://soroban-testnet.stellar.org";
 const TESTNET_PASSPHRASE = Networks.TESTNET;
 
-interface ActivityLog {
-  id: string;
-  type: 'incoming_ach' | 'tokenization' | 'offramp_payout';
-  amount: number;
-  description: string;
-  status: 'PENDING' | 'COMPLETE' | 'FAILED';
-  txHash?: string;
-  timestamp: string;
-}
-
 export default function HarborOverview() {
   const [walletConnected, setWalletConnected] = useState(false);
   const [publicKey, setPublicKey] = useState("");
@@ -48,17 +38,29 @@ export default function HarborOverview() {
   const [totalEarned, setTotalEarned] = useState(4820);
   const [totalSaved, setTotalSaved] = useState(245.80);
 
+  // Dynamic profile cardholder name
+  const [userName, setUserName] = useState("John Doe");
+
   useEffect(() => {
     checkConnection();
+    // Load profile name from localStorage if set
+    if (typeof window !== 'undefined') {
+      const savedName = localStorage.getItem('harbor_profile_name');
+      if (savedName) {
+        setUserName(savedName);
+      }
+    }
   }, []);
 
   const checkConnection = async () => {
     try {
       const connected = await isConnected();
       if (connected) {
-        setWalletConnected(true);
         const pubKey = await getPublicKey();
-        setPublicKey(pubKey);
+        if (pubKey) {
+          setWalletConnected(true);
+          setPublicKey(pubKey);
+        }
       }
     } catch (e) {
       console.error("Wallet connection failed", e);
@@ -68,9 +70,13 @@ export default function HarborOverview() {
   const connectWallet = async () => {
     try {
       const pubKey = await getPublicKey();
-      setPublicKey(pubKey);
-      setWalletConnected(true);
-      setStatus({ type: 'success', message: "Freelancer Wallet connected successfully." });
+      if (pubKey) {
+        setPublicKey(pubKey);
+        setWalletConnected(true);
+        setStatus({ type: 'success', message: "Freelancer Wallet connected successfully." });
+      } else {
+        setStatus({ type: 'error', message: "Freighter returned an empty public key. Make sure it is unlocked." });
+      }
     } catch (e) {
       setStatus({ type: 'error', message: "Failed to connect Freighter wallet. Make sure it is unlocked." });
     }
@@ -175,6 +181,13 @@ export default function HarborOverview() {
     });
   };
 
+  // Dynamic fee calculation values based on sandbox simulation input
+  const currentAmount = parseFloat(incomingAmount) || 0;
+  const paypalFee = (currentAmount * 0.045).toFixed(2);
+  const payoneerFee = (currentAmount * 0.035).toFixed(2);
+  const wiseFee = (currentAmount * 0.012).toFixed(2);
+  const harborFee = (currentAmount * 0.001).toFixed(2); // Accurate 0.1% rate calculation
+
   return (
     <div style={{ maxWidth: '980px' }}>
       
@@ -188,7 +201,7 @@ export default function HarborOverview() {
             Monitor your virtual bank routing and incoming wire settlements.
           </p>
         </div>
-        {walletConnected ? (
+        {publicKey ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               Wallet: <span style={{ fontFamily: 'monospace', fontWeight: '600', color: 'var(--color-blue)' }}>{publicKey.slice(0, 6)}...{publicKey.slice(-4)}</span>
@@ -257,7 +270,7 @@ export default function HarborOverview() {
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1.5fr', gap: '20px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
               <div>
                 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>ROUTING NUMBER</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px' }}>021000021</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px' }}>110000000</span>
               </div>
               <div>
                 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>ACCOUNT NUMBER</span>
@@ -327,7 +340,7 @@ export default function HarborOverview() {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
                 <div>
                   <span style={{ color: 'rgba(255,255,255,0.4)', display: 'block' }}>CARD HOLDER</span>
-                  <span style={{ fontWeight: '600' }}>JOHN DOE</span>
+                  <span style={{ fontWeight: '600' }}>{userName.toUpperCase()}</span>
                 </div>
                 <div>
                   <span style={{ color: 'rgba(255,255,255,0.4)', display: 'block' }}>EXPIRES</span>
@@ -351,7 +364,7 @@ export default function HarborOverview() {
               <div className="comparison-row">
                 <div className="comparison-label-row">
                   <span>PayPal (4.5% avg)</span>
-                  <span style={{ color: 'var(--color-error)' }}>$67.50</span>
+                  <span style={{ color: 'var(--color-error)' }}>${paypalFee}</span>
                 </div>
                 <div className="comparison-bar-outer">
                   <div className="comparison-bar-inner" style={{ width: '100%', background: 'var(--color-error)' }}></div>
@@ -360,7 +373,7 @@ export default function HarborOverview() {
               <div className="comparison-row">
                 <div className="comparison-label-row">
                   <span>Payoneer (3.5% avg)</span>
-                  <span style={{ color: 'var(--color-warning)' }}>$52.50</span>
+                  <span style={{ color: 'var(--color-warning)' }}>${payoneerFee}</span>
                 </div>
                 <div className="comparison-bar-outer">
                   <div className="comparison-bar-inner" style={{ width: '78%', background: 'var(--color-warning)' }}></div>
@@ -369,7 +382,7 @@ export default function HarborOverview() {
               <div className="comparison-row">
                 <div className="comparison-label-row">
                   <span>Wise (1.2% avg)</span>
-                  <span>$18.00</span>
+                  <span>${wiseFee}</span>
                 </div>
                 <div className="comparison-bar-outer">
                   <div className="comparison-bar-inner" style={{ width: '27%', background: 'var(--text-secondary)' }}></div>
@@ -378,7 +391,7 @@ export default function HarborOverview() {
               <div className="comparison-row">
                 <div className="comparison-label-row" style={{ fontWeight: '600', color: 'var(--color-success)' }}>
                   <span>Harbor (&lt;0.1% avg)</span>
-                  <span>$0.01</span>
+                  <span>${harborFee}</span>
                 </div>
                 <div className="comparison-bar-outer">
                   <div className="comparison-bar-inner" style={{ width: '2%', background: 'var(--color-success)' }}></div>
