@@ -42,6 +42,7 @@ export default function HarborInvoices() {
   const [payeeAddress, setPayeeAddress] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [payeeAddressError, setPayeeAddressError] = useState("");
 
   // Client Settlement Hub States
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -78,6 +79,7 @@ export default function HarborInvoices() {
         setPublicKey(pubKey);
         setPayeeAddress(pubKey);
         setWalletConnected(true);
+        setPayeeAddressError("");
       }
     } catch (e) {
       console.error("Wallet connection failed", e);
@@ -115,10 +117,20 @@ export default function HarborInvoices() {
   };
 
   const handleGenerateInvoice = () => {
+    setPayeeAddressError("");
+    
     if (!payeeAddress) {
-      alert("Please provide a valid payee Stellar wallet key.");
+      setPayeeAddressError("Payee Stellar address is required.");
       return;
     }
+
+    // Stellar address regex validator check
+    const isValidStellar = /^G[A-D2-7][A-Z2-7]{54}$/.test(payeeAddress);
+    if (!isValidStellar) {
+      setPayeeAddressError("Please enter a valid Stellar public key (starts with G, 56 characters).");
+      return;
+    }
+
     const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
     const link = `${origin}/invoices?payee=${encodeURIComponent(payeeAddress)}&amount=${encodeURIComponent(invoiceAmount)}&corridor=${encodeURIComponent(invoiceCorridor)}&token=${encodeURIComponent(invoiceToken)}&ref=${encodeURIComponent(invoiceRef)}`;
     setGeneratedLink(link);
@@ -316,14 +328,34 @@ export default function HarborInvoices() {
                   <input 
                     type="text" 
                     value={payeeAddress} 
-                    onChange={(e) => setPayeeAddress(e.target.value)}
+                    onChange={(e) => { setPayeeAddress(e.target.value); setPayeeAddressError(""); }}
                     placeholder="G..." 
+                    style={{ borderColor: payeeAddressError ? 'var(--color-error)' : 'var(--border-light)' }}
                   />
                   {!walletConnected && (
                     <button className="btn btn-secondary" onClick={connectWallet} style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
                       Autofill Wallet
                     </button>
                   )}
+                </div>
+                {payeeAddressError && (
+                  <span style={{ fontSize: '11px', color: 'var(--color-error)', display: 'block', marginTop: '6px' }}>
+                    {payeeAddressError}
+                  </span>
+                )}
+                
+                {/* Demo autofill helper coordinate link */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setPayeeAddress("GD4E3VTMKJCDUVRTGZN37VWIO34237VWIO34");
+                      setPayeeAddressError("");
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-gold-hover)', fontSize: '11px', fontWeight: '600', cursor: 'pointer', padding: 0 }}
+                  >
+                    Use demo wallet address
+                  </button>
                 </div>
               </div>
 
