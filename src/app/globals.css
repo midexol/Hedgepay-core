@@ -5,34 +5,34 @@
   --font-display: 'Cabinet Grotesk', sans-serif;
   --font-serif: 'Outfit', sans-serif;
 
-  /* Premium Luxury Neobank Theme (Deep Navy + Gold + Warm Off-White) */
-  --bg-primary: #fdfaf6;        /* Warm off-white background */
-  --bg-panel: #ffffff;          /* Pure white panels */
-  --border-light: #e6dfd5;      /* Subtle warm border dividers */
-  --border-hover: #c8bdae;
+  /* Premium Luxury Dark-Theme Neobank (Deep Navy Base + Gold + Warm Off-White) */
+  --bg-primary: #0F1B2D;        /* Deep navy primary canvas */
+  --bg-panel: #182840;          /* Slightly lighter navy panel */
+  --border-light: rgba(242, 237, 227, 0.08); /* Subtle warm border dividers */
+  --border-hover: rgba(242, 237, 227, 0.16);
   
   /* Core Brand Accents */
-  --color-accent: #0f1e36;      /* Deep Navy */
-  --color-navy-hover: #0a1424;
-  --color-gold: #f59e0b;        /* Vibrant Brighter Gold */
-  --color-gold-hover: #d97706;
-  --color-gold-light: #fef3c7;
+  --color-accent: #182840;      /* Card navy color */
+  --color-navy-hover: #1e2f4a;
+  --color-gold: #E8B84B;        /* Vibrant Gold accent */
+  --color-gold-hover: #d9a736;
+  --color-gold-light: rgba(232, 184, 75, 0.08);
   
-  /* Text Navy Scale */
-  --text-primary: #0f1e36;      /* High contrast Deep Navy */
-  --text-secondary: #5a6578;    /* Muted Navy */
-  --text-muted: #a3aebf;        /* Soft Navy */
+  /* Text Scale */
+  --text-primary: #F2EDE3;      /* Warm off-white */
+  --text-secondary: #A3AEBF;    /* Soft blue-grey */
+  --text-muted: rgba(242, 237, 227, 0.4);
 
   /* Functional Status */
-  --color-success: #15803d;     /* Deep Green */
-  --color-success-light: #f0fdf4;
-  --color-error: #b91c1c;       /* Deep Red */
-  --color-error-light: #fef2f2;
+  --color-success: #4E8C7C;     /* Muted teal success */
+  --color-success-light: rgba(78, 140, 124, 0.08);
+  --color-error: #E06A55;       /* Muted soft coral red */
+  --color-error-light: rgba(224, 106, 85, 0.08);
   
   /* Premium Shadows */
-  --shadow-sm: 0 1px 3px rgba(15, 30, 54, 0.05);
-  --shadow-md: 0 4px 12px rgba(15, 30, 54, 0.04), 0 1px 3px rgba(15, 30, 54, 0.02);
-  --shadow-lg: 0 20px 40px rgba(15, 30, 54, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -105,7 +105,7 @@ aside {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--bg-panel);
   border: 2px solid var(--border-light);
   display: flex;
   align-items: center;
@@ -182,25 +182,26 @@ aside {
 }
 
 .btn-secondary {
-  background: var(--bg-panel);
+  background: rgba(242, 237, 227, 0.04);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #fdfaf6;
+  background: rgba(242, 237, 227, 0.08);
   border-color: var(--border-hover);
 }
 
 .btn-action {
   background: var(--color-gold);
-  color: white;
-  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.2);
+  color: var(--bg-primary);
+  box-shadow: 0 4px 12px rgba(232, 184, 75, 0.15);
+  border: 1px solid var(--color-gold);
 }
 
 .btn-action:hover:not(:disabled) {
   background: var(--color-gold-hover);
-  box-shadow: 0 6px 16px rgba(197, 160, 89, 0.3);
+  box-shadow: 0 6px 16px rgba(232, 184, 75, 0.25);
   transform: translateY(-0.5px);
 }
 
@@ -212,7 +213,7 @@ aside {
 /* Forms */
 input[type="text"], select {
   width: 100%;
-  background: #ffffff;
+  background: rgba(15, 27, 45, 0.4);
   border: 1px solid var(--border-light);
   border-radius: 6px;
   padding: 12px 16px;
@@ -225,7 +226,7 @@ input[type="text"], select {
 input[type="text"]:focus, select:focus {
   outline: none;
   border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+  box-shadow: 0 0 0 3px rgba(232, 184, 75, 0.15);
 }
 
 /* Visual Visa Debit Card Component */
@@ -282,7 +283,7 @@ input[type="text"]:focus, select:focus {
 .comparison-bar-outer {
   width: 100%;
   height: 8px;
-  background: #f1f5f9;
+  background: rgba(242, 237, 227, 0.08);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -314,7 +315,7 @@ th, td {
 }
 
 th {
-  background: #fafbfc;
+  background: rgba(242, 237, 227, 0.03);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 12px;
@@ -323,7 +324,7 @@ th {
 }
 
 tr:hover td {
-  background: #fafbfc;
+  background: rgba(242, 237, 227, 0.02);
 }
 
 tr:last-child td {
@@ -348,20 +349,20 @@ tr:last-child td {
 
 .alert-error {
   background: var(--color-error-light);
-  border-color: #ffd8d6;
-  color: #8c1b18;
+  border-color: rgba(224, 106, 85, 0.2);
+  color: var(--color-error);
 }
 
 .alert-success {
   background: var(--color-success-light);
-  border-color: #bbf7d0;
-  color: #115e59;
+  border-color: rgba(78, 140, 124, 0.2);
+  color: var(--color-success);
 }
 
 .alert-info {
-  background: var(--color-blue-light);
-  border-color: #dbeafe;
-  color: #1e40af;
+  background: rgba(96, 165, 250, 0.08);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
 }
 
 /* Ambient Ripple Wave Animation class */
@@ -448,4 +449,33 @@ tr:last-child td {
     margin-left: 0 !important;
     padding: 24px 16px 80px !important;
   }
+}
+
+/* Landing Page Hero Animations */
+.hero-svg-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawRouteLine 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+.hero-pulse-node {
+  transform-origin: center;
+  animation: pulseNode 3s ease-in-out infinite;
+}
+
+@keyframes drawRouteLine {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes pulseNode {
+  0% { r: 5; opacity: 0.6; }
+  50% { r: 8; opacity: 1; filter: drop-shadow(0 0 6px var(--color-gold)); }
+  100% { r: 5; opacity: 0.6; }
+}
+
+@keyframes meshGlow {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import './globals.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { isConnected, getPublicKey } from '@stellar/freighter-api';
 
 export default function RootLayout({
   children,
@@ -12,9 +13,41 @@ export default function RootLayout({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const [walletAddress, setWalletAddress] = useState("");
 
   // Hide side navigation on marketing home and auth pages
   const hideSidebar = pathname === '/' || pathname === '/auth';
+
+  useEffect(() => {
+    if (!hideSidebar) {
+      checkWallet();
+    }
+  }, [pathname, hideSidebar]);
+
+  const checkWallet = async () => {
+    try {
+      const connected = await isConnected();
+      if (connected) {
+        const pubKey = await getPublicKey();
+        if (pubKey) {
+          setWalletAddress(pubKey);
+        }
+      }
+    } catch (e) {
+      console.error("Wallet check failed", e);
+    }
+  };
+
+  const handleSidebarConnect = async () => {
+    try {
+      const pubKey = await getPublicKey();
+      if (pubKey) {
+        setWalletAddress(pubKey);
+      }
+    } catch (e) {
+      console.error("Sidebar connection failed", e);
+    }
+  };
 
   return (
     <html lang="en">
@@ -87,7 +120,7 @@ export default function RootLayout({
                         justifyContent: 'center',
                         transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#fdfaf6'}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(242, 237, 227, 0.04)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -184,7 +217,34 @@ export default function RootLayout({
                       <span style={{ fontSize: '14px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--text-primary)' }}>$4,820.00</span>
                     </div>
                   )}
-                  {!collapsed && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600', letterSpacing: '0.5px' }}>SYSTEM status</span>}
+
+                  {walletAddress ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
+                      {!collapsed && <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '600', letterSpacing: '0.5px' }}>CONNECTED WALLET</span>}
+                      <span style={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '11px', 
+                        fontWeight: '700', 
+                        color: 'var(--color-gold)', 
+                        textAlign: collapsed ? 'center' : 'left',
+                        wordBreak: 'break-all'
+                      }}>
+                        {collapsed ? `${walletAddress.slice(0, 3)}..` : `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
+                      </span>
+                    </div>
+                  ) : (
+                    !collapsed && (
+                      <button 
+                        onClick={handleSidebarConnect}
+                        className="btn btn-secondary"
+                        style={{ width: '100%', padding: '6px', fontSize: '11px', marginBottom: '8px', height: '28px' }}
+                      >
+                        Connect Wallet
+                      </button>
+                    )
+                  )}
+
+                  {!collapsed && <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600', letterSpacing: '0.5px' }}>SYSTEM STATUS</span>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: collapsed ? 'center' : 'flex-start' }}>
                     <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-success)' }}></span>
                     {!collapsed && <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)' }}>Stellar Testnet</span>}

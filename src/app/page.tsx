@@ -96,57 +96,96 @@ export default function HarborLanding() {
       {/* Hero Section */}
       <section style={{ 
         maxWidth: '960px', 
-        margin: '80px auto 32px', 
-        textAlign: 'center', 
-        padding: '0 24px',
+        margin: '80px auto 48px', 
+        textAlign: 'left', 
+        padding: '80px 56px',
         position: 'relative',
-        zIndex: 10
+        zIndex: 10,
+        background: 'radial-gradient(circle at 85% 50%, rgba(232, 184, 75, 0.08) 0%, rgba(24, 40, 64, 0.0) 60%), var(--bg-panel)',
+        borderRadius: '16px',
+        border: '1px solid var(--border-light)',
+        boxShadow: 'var(--shadow-md)',
+        overflow: 'hidden'
       }}>
-        <span style={{ 
-          fontSize: '11px', 
-          fontWeight: '700', 
-          letterSpacing: '1.5px', 
-          color: 'var(--color-gold)', 
-          textTransform: 'uppercase',
-          background: 'var(--color-gold-light)',
-          padding: '6px 14px',
-          borderRadius: '4px',
-          border: '1px solid rgba(197, 160, 89, 0.15)'
-        }}>
-          Global Salary Infrastructure
-        </span>
-        
-        <h1 style={{ 
-          fontFamily: 'var(--font-serif)', 
-          fontWeight: '700', 
-          fontSize: '56px', 
-          lineHeight: '1.15', 
-          color: 'var(--text-primary)', 
-          marginTop: '28px',
-          letterSpacing: '-1px'
-        }}>
-          Stop losing remote earnings<br />
-          to legacy bank markups.
-        </h1>
-        
-        <p style={{ 
-          color: 'var(--text-secondary)', 
-          fontSize: '18px', 
-          maxWidth: '650px', 
-          margin: '24px auto 36px',
-          lineHeight: '1.6',
-          fontFamily: 'var(--font-sans)'
-        }}>
-          Receive standard USD wire deposits. Automatically route your salary onto Stellar USDC, and off-ramp instantly to local channels for near-zero fee leakage.
-        </p>
+        {/* Glow Mesh Ambient circle inside container */}
+        <div style={{
+          position: 'absolute',
+          top: '-20%',
+          right: '-10%',
+          width: '500px',
+          height: '500px',
+          background: 'radial-gradient(circle, rgba(232, 184, 75, 0.12) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(30px)',
+          pointerEvents: 'none',
+          zIndex: 1,
+          animation: 'meshGlow 8s infinite ease-in-out'
+        }}></div>
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <Link href="/auth" className="btn btn-action" style={{ padding: '14px 28px', fontSize: '14px' }}>
-            Get Started
-          </Link>
-          <a href="#how-it-works" className="btn btn-secondary" style={{ padding: '14px 28px', fontSize: '14px' }}>
-            See how it works
-          </a>
+        {/* Animated SVG Route Line */}
+        <svg 
+          width="100%" 
+          height="100%" 
+          viewBox="0 0 1000 400" 
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none', zIndex: 2 }}
+        >
+          {/* Main Sweeping Route Path */}
+          <path 
+            d="M 300,320 L 160,110 C 260,130 360,200 465,280 C 560,290 660,250 730,100" 
+            fill="none" 
+            stroke="var(--color-gold)" 
+            strokeWidth="2.5" 
+            strokeOpacity="0.25"
+            className="hero-svg-path"
+          />
+          {/* Branching Tail Path */}
+          <path 
+            d="M 465,280 L 650,300" 
+            fill="none" 
+            stroke="var(--color-gold)" 
+            strokeWidth="2.5" 
+            strokeOpacity="0.25"
+            className="hero-svg-path"
+          />
+          {/* Staggered pulsing nodes precisely matching control points */}
+          <circle cx="160" cy="110" r="5" fill="var(--color-gold)" className="hero-pulse-node" style={{ animationDelay: '0s' }} />
+          <circle cx="300" cy="320" r="5" fill="var(--color-gold)" className="hero-pulse-node" style={{ animationDelay: '0.6s' }} />
+          <circle cx="465" cy="280" r="5" fill="var(--color-gold)" className="hero-pulse-node" style={{ animationDelay: '1.2s' }} />
+          <circle cx="650" cy="300" r="5" fill="var(--color-gold)" className="hero-pulse-node" style={{ animationDelay: '1.8s' }} />
+          <circle cx="730" cy="100" r="5" fill="var(--color-gold)" className="hero-pulse-node" style={{ animationDelay: '2.4s' }} />
+        </svg>
+
+        {/* Content Overlay */}
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: '580px' }}>
+          <h1 style={{ 
+            fontFamily: 'var(--font-serif)', 
+            fontWeight: '800', 
+            fontSize: '44px', 
+            lineHeight: '1.2', 
+            color: 'var(--text-primary)', 
+            letterSpacing: '-1.5px',
+            marginBottom: '16px'
+          }}>
+            Stop losing remote earnings<br />
+            to legacy bank markups.
+          </h1>
+          
+          <p style={{ 
+            color: 'var(--text-secondary)', 
+            fontSize: '17px', 
+            lineHeight: '1.5',
+            fontFamily: 'var(--font-sans)',
+            marginBottom: '32px'
+          }}>
+            Route USD wires into instant local payouts. Automatically route your salary onto Stellar USDC, and off-ramp instantly to local channels for near-zero fee leakage.
+          </p>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <Link href="/auth" className="btn btn-action" style={{ padding: '12px 28px', fontSize: '13.5px' }}>
+              Get started
+            </Link>
+          </div>
         </div>
       </section>
 
