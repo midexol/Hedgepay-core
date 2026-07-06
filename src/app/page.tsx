@@ -96,7 +96,7 @@ export default function HarborLanding() {
       {/* Hero Section */}
       <section style={{ 
         maxWidth: '960px', 
-        margin: '120px auto 100px', 
+        margin: '80px auto 32px', 
         textAlign: 'center', 
         padding: '0 24px',
         position: 'relative',
@@ -153,7 +153,7 @@ export default function HarborLanding() {
       {/* Corridor Trust Bar */}
       <div style={{ 
         maxWidth: '780px', 
-        margin: '0 auto 100px', 
+        margin: '0 auto 60px', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 

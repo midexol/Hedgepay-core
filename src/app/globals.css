@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Cabinet Grotesk', sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-serif: 'Outfit', sans-serif;
 
   /* Premium Luxury Neobank Theme (Deep Navy + Gold + Warm Off-White) */
   --bg-primary: #fdfaf6;        /* Warm off-white background */

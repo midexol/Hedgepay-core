@@ -109,7 +109,7 @@ export default function HarborAuth() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '40px 24px',
+        padding: '60px 24px',
         background: 'var(--bg-panel)',
         zIndex: 10
       }}>
@@ -281,6 +281,30 @@ export default function HarborAuth() {
             </button>
           </form>
 
+          {/* New Trust & Benefits Density List */}
+          <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: '1px solid var(--border-light)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <span style={{ color: 'var(--color-gold)', fontWeight: 'bold', fontSize: '14px' }}>✓</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  <strong>Stellar-Secured Payouts:</strong> Zero custody, fully cryptographic settlement validation.
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <span style={{ color: 'var(--color-gold)', fontWeight: 'bold', fontSize: '14px' }}>✓</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  <strong>Instant Off-Ramps:</strong> Direct deposit routing to GCash, Maya, and local bank rails.
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <span style={{ color: 'var(--color-gold)', fontWeight: 'bold', fontSize: '14px' }}>✓</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  <strong>Sub-0.1% Network Fees:</strong> Bypass predatory intermediary swift wire transaction costs.
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -296,29 +320,18 @@ export default function HarborAuth() {
         alignItems: 'center',
         padding: '48px'
       }}>
-        {/* Subtle SVG Ripple Rings */}
+        {/* Animated Linear Grid Pattern overlay */}
         <div style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          width: '500px',
-          height: '500px',
-          border: '1px solid rgba(245, 158, 11, 0.12)',
-          borderRadius: '50%',
-          transform: 'translate(-50%, -50%)',
-          animation: 'ripple 10s infinite linear'
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: '320px',
-            height: '320px',
-            border: '1px solid rgba(245, 158, 11, 0.06)',
-            borderRadius: '50%',
-            transform: 'translate(-50%, -50%)'
-          }}></div>
-        </div>
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.05,
+          backgroundImage: 'linear-gradient(90deg, rgba(245, 158, 11, 0.3) 1px, transparent 1px), linear-gradient(0deg, rgba(245, 158, 11, 0.3) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          animation: 'gridMove 30s linear infinite'
+        }}></div>
 
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: '400px' }}>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '32px', color: 'white', fontWeight: '700', lineHeight: '1.25' }}>
@@ -330,11 +343,15 @@ export default function HarborAuth() {
         </div>
       </div>
 
-      {/* Inline styles for basic keyframe loading spin */}
+      {/* Inline styles for keyframe gridMove and spin */}
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        @keyframes gridMove {
+          0% { background-position: 0 0; }
+          100% { background-position: 40px 40px; }
         }
       `}</style>
 

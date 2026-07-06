@@ -29,6 +29,9 @@ export default function HarborVaults() {
     { id: "v-03", type: "deposit", amount: 120.00, date: "2026-06-28" }
   ]);
 
+  // FAQ state
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
   // Live ticking ref
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -68,6 +71,10 @@ export default function HarborVaults() {
     setTimeout(() => {
       setShowToast(false);
     }, 3000);
+  };
+
+  const toggleFaq = (index: number) => {
+    setActiveFaq(prev => (prev === index ? null : index));
   };
 
   const splitOfframp = 100 - splitYield;
@@ -121,7 +128,9 @@ export default function HarborVaults() {
 
       {/* 1. Improved Empty State (Before Vault Initialization) */}
       {!vaultInitialized && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', alignItems: 'center' }}>
+          
+          {/* Main Escrow Deployment Card */}
           <div 
             className="glass-panel" 
             style={{ 
@@ -225,6 +234,66 @@ export default function HarborVaults() {
               Withdraw Anytime
             </span>
           </div>
+
+          {/* Secondary Content Card: FAQ Accordion (Density Fix) */}
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '680px', margin: '0 auto', padding: '32px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '20px', color: 'var(--text-primary)' }}>
+              Frequently Asked Questions
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              
+              {/* FAQ Item 1 */}
+              <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px' }}>
+                <button 
+                  onClick={() => toggleFaq(1)}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '4px 0' }}
+                >
+                  <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>How is the 5.4% yield generated?</span>
+                  <span style={{ color: 'var(--color-gold-hover)', fontSize: '16px' }}>{activeFaq === 1 ? '−' : '+'}</span>
+                </button>
+                {activeFaq === 1 && (
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.6' }}>
+                    Capital is routed through fully compliant, regulated treasury tokens (such as tokenized US Treasury bills) on the Stellar network. Yield accrues continuously and is distributed to your balance on-chain.
+                  </p>
+                )}
+              </div>
+
+              {/* FAQ Item 2 */}
+              <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px' }}>
+                <button 
+                  onClick={() => toggleFaq(2)}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '4px 0' }}
+                >
+                  <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Are my savings locked?</span>
+                  <span style={{ color: 'var(--color-gold-hover)', fontSize: '16px' }}>{activeFaq === 2 ? '−' : '+'}</span>
+                </button>
+                {activeFaq === 2 && (
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.6' }}>
+                    No. The escrow vault maintains full liquidity. You can adjust your split configuration slider or request a withdrawal back to your local e-wallet corridor at any time with zero penalty or exit fees.
+                  </p>
+                )}
+              </div>
+
+              {/* FAQ Item 3 */}
+              <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '12px' }}>
+                <button 
+                  onClick={() => toggleFaq(3)}
+                  style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '4px 0' }}
+                >
+                  <span style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--text-primary)' }}>Is there custody risk?</span>
+                  <span style={{ color: 'var(--color-gold-hover)', fontSize: '16px' }}>{activeFaq === 3 ? '−' : '+'}</span>
+                </button>
+                {activeFaq === 3 && (
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.6' }}>
+                    No. Your assets are stored in a non-custodial smart contract escrow on the Stellar network. Payout rules can only be updated with your authenticated signature, verifiable publicly at any time.
+                  </p>
+                )}
+              </div>
+
+            </div>
+          </div>
+
         </div>
       )}
 
