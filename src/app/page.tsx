@@ -3,6 +3,572 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+// Docs redesign specifications & helper constants
+const COLORS = {
+  bg: "#10181F",
+  panel: "#16212B",
+  panelAlt: "#131C24",
+  border: "#28363F",
+  textPrimary: "#E9EEF1",
+  textSecondary: "#8CA2AC",
+  textMuted: "#5E7079",
+  brass: "#C08A4E",
+  brassDim: "#8C6A45",
+  teal: "#4FAE8A",
+};
+
+const FONTS = (
+  <style dangerouslySetInnerHTML={{ __html: `
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+    .harbor-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
+    .harbor-body { font-family: 'IBM Plex Sans', sans-serif; }
+    .harbor-mono { font-family: 'IBM Plex Mono', monospace; }
+  `}} />
+);
+
+const NAV_SECTIONS = [
+  {
+    label: "Introduction",
+    items: ["Abstract", "Problem Statement", "Solution Overview"],
+  },
+  {
+    label: "Core Concepts",
+    items: ["Technical Architecture", "Token / Asset Model"],
+  },
+  {
+    label: "User Flows",
+    items: ["Use Case Walkthroughs", "Market Landscape"],
+  },
+  {
+    label: "Development",
+    items: ["Roadmap", "Team"],
+  },
+  {
+    label: "Security",
+    items: ["Risks & Mitigations", "References & Links"],
+  },
+];
+
+const SECTION_METADATA: Record<string, { subtitle: string; next: string | null }> = {
+  "Abstract": { subtitle: "Section 01 — Introduction", next: "Problem Statement" },
+  "Problem Statement": { subtitle: "Section 02 — Introduction", next: "Solution Overview" },
+  "Solution Overview": { subtitle: "Section 03 — Introduction", next: "Technical Architecture" },
+  "Technical Architecture": { subtitle: "Section 04 — Core Concepts", next: "Token / Asset Model" },
+  "Token / Asset Model": { subtitle: "Section 05 — Core Concepts", next: "Use Case Walkthroughs" },
+  "Use Case Walkthroughs": { subtitle: "Section 06 — User Flows", next: "Market Landscape" },
+  "Market Landscape": { subtitle: "Section 07 — User Flows", next: "Roadmap" },
+  "Roadmap": { subtitle: "Section 08 — Development", next: "Team" },
+  "Team": { subtitle: "Section 09 — Development", next: "Risks & Mitigations" },
+  "Risks & Mitigations": { subtitle: "Section 10 — Security", next: "References & Links" },
+  "References & Links": { subtitle: "Section 11 — Security", next: null }
+};
+
+interface SidebarProps {
+  active: string;
+  onSelect: (item: string) => void;
+}
+
+function Sidebar({ active, onSelect }: SidebarProps) {
+  return (
+    <aside
+      style={{ 
+        width: '240px', 
+        flexShrink: 0, 
+        height: '100%', 
+        overflowY: 'auto', 
+        padding: '24px 20px', 
+        background: COLORS.panel, 
+        borderRight: `1px solid ${COLORS.border}` 
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '32px' }}>
+        <div
+          className="harbor-mono"
+          style={{ 
+            width: '28px', 
+            height: '28px', 
+            borderRadius: '4px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: '12px', 
+            fontWeight: '600',
+            background: COLORS.brass, 
+            color: COLORS.bg 
+          }}
+        >
+          H
+        </div>
+        <span
+          className="harbor-display"
+          style={{ color: COLORS.textPrimary, fontSize: '18px', fontWeight: '500', letterSpacing: '-0.3px' }}
+        >
+          Harbor
+        </span>
+      </div>
+
+      <div
+        className="harbor-mono"
+        style={{ color: COLORS.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: "0.12em", marginBottom: '4px', fontWeight: '600' }}
+      >
+        TECHNICAL SPEC
+      </div>
+      <h1
+        className="harbor-display"
+        style={{ color: COLORS.textPrimary, fontSize: '24px', fontWeight: 500, marginBottom: '24px' }}
+      >
+        Documentation
+      </h1>
+
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.label} style={{ marginBottom: '20px' }}>
+          <div
+            className="harbor-mono"
+            style={{ color: COLORS.textMuted, fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: "0.1em", marginBottom: '8px', fontWeight: '700' }}
+          >
+            {section.label}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {section.items.map((item) => {
+              const isActive = item === active;
+              return (
+                <button
+                  key={item}
+                  onClick={() => onSelect(item)}
+                  className="harbor-body"
+                  style={{
+                    textAlign: 'left',
+                    fontSize: '13px',
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    color: isActive ? COLORS.textPrimary : COLORS.textSecondary,
+                    background: isActive ? "rgba(192,138,78,0.12)" : "transparent",
+                    borderLeft: isActive
+                      ? `2px solid ${COLORS.brass}`
+                      : "2px solid transparent",
+                  }}
+                >
+                  {item}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </aside>
+  );
+}
+
+function ManifestStamp() {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        gap: '4px',
+        padding: '16px 20px',
+        borderRadius: '6px',
+        border: `1px solid ${COLORS.brassDim}`,
+        background: "rgba(192,138,78,0.06)",
+        marginTop: '16px'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <span
+          className="harbor-mono"
+          style={{ color: COLORS.brass, fontSize: '11px', textTransform: 'uppercase', letterSpacing: "0.1em" }}
+        >
+          Manifest — Total Friction
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+        <span
+          className="harbor-display"
+          style={{ color: COLORS.textPrimary, fontSize: '36px', fontWeight: 500 }}
+        >
+          &lt;0.2%
+        </span>
+        <span className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '13.5px' }}>
+          settlement cost, spot mid-market rate
+        </span>
+      </div>
+      <p className="harbor-body" style={{ color: COLORS.textMuted, fontSize: '12px', marginTop: '4px', margin: 0, lineHeight: '1.5' }}>
+        Routed through Stellar liquidity pools directly — no correspondent
+        bank spread, no intermediary markup.
+      </p>
+    </div>
+  );
+}
+
+interface ContentAreaProps {
+  active: string;
+  onSelect: (item: string) => void;
+}
+
+function ContentArea({ active, onSelect }: ContentAreaProps) {
+  const meta = SECTION_METADATA[active] || { subtitle: "Section Overview", next: null };
+
+  const renderContent = () => {
+    switch (active) {
+      case "Abstract":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Harbor is a Web3 payment infrastructure built on Stellar/Soroban that lets companies pay contractors across borders instantly, cheaply, and transparently.
+            </p>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '24px' }}>
+              It targets high-friction corridors — Philippines, Indonesia, Vietnam, and Nigeria — where existing rails (banks, legacy remittance apps, informal agents) impose slow settlement times, high fees, and poor visibility into transaction status. Harbor replaces this with a settlement layer built on Stellar's fast, low-cost network, giving employers and contractors a neobank-like experience without the correspondent-banking overhead.
+            </p>
+            <ManifestStamp />
+          </>
+        );
+      
+      case "Problem Statement":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Paying international contractors today is broken in predictable ways:
+            </p>
+            <ul className="harbor-body" style={{ paddingLeft: '20px', color: COLORS.textSecondary, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+              <li><strong style={{ color: COLORS.textPrimary }}>Cost:</strong> Traditional wire transfers and remittance services often charge 3–8% per transaction once FX spread, intermediary bank fees, and payout fees are combined.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Speed:</strong> Cross-border payments frequently take 2–5 business days to settle, longer around bank holidays or when routed through multiple correspondent banks.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Opacity:</strong> Senders and recipients often can't see where a payment is in transit, leading to support overhead and lost trust.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Access:</strong> Contractors in emerging markets (Philippines, Indonesia, Vietnam, Nigeria) are frequently underserved by traditional banking rails, facing account restrictions or unfavorable conversion spreads.</li>
+            </ul>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ padding: '16px', background: COLORS.panelAlt, borderRadius: '6px', border: `1px solid ${COLORS.border}` }}>
+                <span className="harbor-display" style={{ fontWeight: '600', fontSize: '15px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>🇵🇭 Philippines (PHP)</span>
+                <span className="harbor-body" style={{ fontSize: '12.5px', color: COLORS.textSecondary, lineHeight: '1.5' }}>High GCash/Maya reliance; legacy wires suffer heavy correspondent bank fees.</span>
+              </div>
+              <div style={{ padding: '16px', background: COLORS.panelAlt, borderRadius: '6px', border: `1px solid ${COLORS.border}` }}>
+                <span className="harbor-display" style={{ fontWeight: '600', fontSize: '15px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>🇮🇩 Indonesia (IDR)</span>
+                <span className="harbor-body" style={{ fontSize: '12.5px', color: COLORS.textSecondary, lineHeight: '1.5' }}>Fragmented e-wallet landscape (OVO, GoPay) requiring complex FX gateways.</span>
+              </div>
+              <div style={{ padding: '16px', background: COLORS.panelAlt, borderRadius: '6px', border: `1px solid ${COLORS.border}` }}>
+                <span className="harbor-display" style={{ fontWeight: '600', fontSize: '15px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>🇻🇳 Vietnam (VND)</span>
+                <span className="harbor-body" style={{ fontSize: '12.5px', color: COLORS.textSecondary, lineHeight: '1.5' }}>Capital controls and paperwork delay wire clearances by several days.</span>
+              </div>
+              <div style={{ padding: '16px', background: COLORS.panelAlt, borderRadius: '6px', border: `1px solid ${COLORS.border}` }}>
+                <span className="harbor-display" style={{ fontWeight: '600', fontSize: '15px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>🇳🇬 Nigeria (NGN)</span>
+                <span className="harbor-body" style={{ fontSize: '12.5px', color: COLORS.textSecondary, lineHeight: '1.5' }}>High inflation; extreme parallel market spreads and banking access issues.</span>
+              </div>
+            </div>
+          </>
+        );
+
+      case "Solution Overview":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Harbor provides a single payment rail for global contractor payouts, built on Stellar/Soroban smart contracts. Employers fund a Harbor account once; contractors receive funds in their local corridor near-instantly.
+            </p>
+            <ul className="harbor-body" style={{ paddingLeft: '20px', color: COLORS.textSecondary, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: '1.6' }}>
+              <li><strong style={{ color: COLORS.textPrimary }}>One integration, many corridors:</strong> Employers don't need separate relationships with local payment providers in each country.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Settlement in seconds:</strong> Leveraging Stellar's fast ~5 second transaction finality.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Transparent by default:</strong> Every payment is traceable on-chain, with readable status for both sides.</li>
+              <li><strong style={{ color: COLORS.textPrimary }}>Low, predictable fees:</strong> A flat 0.15% transaction fee instead of FX-spread-based markups.</li>
+            </ul>
+          </>
+        );
+
+      case "Technical Architecture":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              <strong>3.1 Why Stellar/Soroban:</strong> Stellar was purpose-built for cross-border value transfer and has live anchor infrastructure (on/off-ramps) in target corridors. Soroban adds smart contract programmability to encode batch split calculations directly on-chain.
+            </p>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              <strong>3.2 System Components:</strong> Payment contracts (Rust/Soroban validating sum limits), settlement layers (DEX routers), anchor integrations (local e-wallets), and application dashboards.
+            </p>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '24px' }}>
+              <strong>3.3 Custody & Security:</strong> Non-custodial signature model utilizing the Freighter wallet. Contractors retain full control over escrow accounts with zero administrative protocol override keys.
+            </p>
+
+            <span className="harbor-mono" style={{ fontSize: '10.5px', color: COLORS.brass, display: 'block', marginBottom: '6px', fontWeight: '700' }}>SUM RECONCILIATION METHOD</span>
+            <pre style={{
+              background: COLORS.panelAlt,
+              padding: '16px',
+              borderRadius: '6px',
+              border: `1px solid ${COLORS.border}`,
+              overflowX: 'auto',
+              fontFamily: 'monospace',
+              fontSize: '11.5px',
+              color: COLORS.textSecondary,
+              lineHeight: '1.5'
+            }}>
+{`let mut calculated_total: i128 = 0;
+for item in items.iter() {
+    calculated_total = calculated_total.checked_add(item.amount)
+        .ok_or(ContractError::MathOverflow)?;
+}
+if calculated_total != declared_total {
+    return Err(ContractError::TotalMismatch);
+}`}
+            </pre>
+          </>
+        );
+
+      case "Token / Asset Model":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Harbor does **not** introduce a native speculative token.
+            </p>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8' }}>
+              All settlements occur in fully-backed stablecoins (USDC/EURC) and Stellar's native utility asset (XLM) to avoid price volatility and ensure contractors retain the exact value of their invoices. Variable savings vaults deposit USDC directly into tokenized short-term US Treasury bills on Stellar, yielding 5.4% APY.
+            </p>
+          </>
+        );
+
+      case "Use Case Walkthroughs":
+        return (
+          <>
+            <div className="harbor-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <strong style={{ fontSize: '14px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>1. Batch Payroll Payouts</strong>
+                <span style={{ fontSize: '13px', color: COLORS.textSecondary, lineHeight: '1.6', display: 'block' }}>
+                  A US employer sets up a monthly payroll batch. On payday, they approve the batch in a single Freighter signature transaction. The Soroban contract splits the batch and routes USDC to contractors in Nigeria, Vietnam, and the Philippines, settling within seconds.
+                </span>
+              </div>
+              <div>
+                <strong style={{ fontSize: '14px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>2. One-Off Contractor Transfers</strong>
+                <span style={{ fontSize: '13px', color: COLORS.textSecondary, lineHeight: '1.6', display: 'block' }}>
+                  For ad-hoc payout items, employers transfer directly to contractor addresses. The DEX router automatically performs path-payments to convert assets at mid-market spot rates.
+                </span>
+              </div>
+              <div>
+                <strong style={{ fontSize: '14px', color: COLORS.textPrimary, display: 'block', marginBottom: '4px' }}>3. Contractor-Initiated Invoices</strong>
+                <span style={{ fontSize: '13px', color: COLORS.textSecondary, lineHeight: '1.6', display: 'block' }}>
+                  Freelancers generate invoice links (defining local bank cash-outs and split percentages). The client opens the link on their portal and settlements are batched and executed instantly.
+                </span>
+              </div>
+            </div>
+          </>
+        );
+
+      case "Market Landscape":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '24px' }}>
+              The global remote contractor market represents over $150 billion in annual volume, with Southeast Asia and Africa being the fastest-growing remittance corridors.
+            </p>
+            
+            <div style={{ overflowX: 'auto', borderRadius: '6px', border: `1px solid ${COLORS.border}`, background: COLORS.panelAlt }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>METRIC</th>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>TRADITIONAL WIRE</th>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>LEGACY REMITTANCE</th>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>HARBOR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Settlement</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>2 - 5 days</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Hours - 1 day</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.teal, fontWeight: '700' }}>~5 seconds</td>
+                  </tr>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Typical Fee</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>3% - 8%</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>1% - 5%</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.teal, fontWeight: '700' }}>0.15% (flat)</td>
+                  </tr>
+                  <tr>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Transparency</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Low</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Medium</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.teal, fontWeight: '700' }}>High (on-chain)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </>
+        );
+
+      case "Roadmap":
+        return (
+          <>
+            <div style={{ overflowX: 'auto', borderRadius: '6px', border: `1px solid ${COLORS.border}`, background: COLORS.panelAlt }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>PHASE</th>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>MILESTONE</th>
+                    <th className="harbor-mono" style={{ padding: '12px 16px', fontSize: '11px', color: COLORS.textMuted, fontWeight: '700' }}>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Phase 1</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Core payment contract + Stellar settlement</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '12px', color: COLORS.teal, fontWeight: '700' }}>COMPLETED</td>
+                  </tr>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Phase 2</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Anchor integrations (PH, ID, VN, NG)</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '12px', color: COLORS.teal, fontWeight: '700' }}>COMPLETED</td>
+                  </tr>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Phase 3</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>UI/UX polish, employer dashboard, contractor payout flow</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '12px', color: COLORS.brass, fontWeight: '700' }}>IN PROGRESS</td>
+                  </tr>
+                  <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Phase 4</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>GrantFox OSS deliverables (Fee-sponsorship)</td>
+                    <td className="harbor-mono" style={{ padding: '12px 16px', fontSize: '12px', color: COLORS.brass, fontWeight: '700' }}>ACTIVE</td>
+                  </tr>
+                  <tr>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textPrimary }}>Phase 5</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '13px', color: COLORS.textSecondary }}>Additional corridor expansion</td>
+                    <td className="harbor-body" style={{ padding: '12px 16px', fontSize: '12px', color: COLORS.textMuted }}>PLANNED</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </>
+        );
+
+      case "Team":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Harbor is developed by an experienced Web3 developer and FUTA Computer Science student.
+            </p>
+            <ul className="harbor-body" style={{ paddingLeft: '20px', color: COLORS.textSecondary, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', lineHeight: '1.6' }}>
+              <li><strong style={{ color: COLORS.textPrimary }}>Tech Stack:</strong> Solidity, Rust/Soroban smart contracts, and React/TypeScript.</li>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Hackathon Track Record:</strong>
+                <ul style={{ paddingLeft: '20px', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                  <li>Morph Build In! Payments (FlowPay) — Winner</li>
+                  <li>Agora Agents Hackathon — Winner</li>
+                  <li>MetaMask Smart Accounts x 1Shot x Venice AI Dev Cook-Off — Winner</li>
+                  <li>CDR Hackathon — Winner</li>
+                </ul>
+              </li>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Open-Source Portfolios:</strong>
+                <span style={{ display: 'block', fontSize: '12.5px', color: COLORS.textMuted }}>Contributed to Soroban contracts and frontend portals (such as *Remitwise-Contracts* and *Credence-Frontend*).</span>
+              </li>
+            </ul>
+          </>
+        );
+
+      case "Risks & Mitigations":
+        return (
+          <>
+            <ul className="harbor-body" style={{ paddingLeft: '20px', color: COLORS.textSecondary, display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '14px', lineHeight: '1.6' }}>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Regulatory Risk:</strong> Cross-border rails touch complex money transfer rules.
+                <span style={{ display: 'block', fontSize: '12.5px', color: COLORS.textMuted, marginTop: '2px' }}>➔ Mitigation: Partnering directly with licensed, regulated local anchors rather than transmitting funds.</span>
+              </li>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Anchor/Liquidity Risk:</strong> Local cash-outs depend on anchor uptime and pool sizes.
+                <span style={{ display: 'block', fontSize: '12.5px', color: COLORS.textMuted, marginTop: '2px' }}>➔ Mitigation: Integrating fallback anchor channels and redundant routes.</span>
+              </li>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Adoption Risk:</strong> Freelancers fear complex Web3 interface operations.
+                <span style={{ display: 'block', fontSize: '12.5px', color: COLORS.textMuted, marginTop: '2px' }}>➔ Mitigation: Transparent pricing, simple links, and gasless (Fee-bumped) setups to hide crypto mechanics.</span>
+              </li>
+              <li>
+                <strong style={{ color: COLORS.textPrimary }}>Technical Risk:</strong> Contract bugs in payroll splitter math.
+                <span style={{ display: 'block', fontSize: '12.5px', color: COLORS.textMuted, marginTop: '2px' }}>➔ Mitigation: Comprehensive on-chain sum verification tests and planned code audits.</span>
+              </li>
+            </ul>
+          </>
+        );
+
+      case "References & Links":
+        return (
+          <>
+            <p className="harbor-body" style={{ color: COLORS.textSecondary, fontSize: '15px', lineHeight: '1.8', marginBottom: '16px' }}>
+              Access Harbor technical specifications and setup guidelines:
+            </p>
+            <ul className="harbor-body" style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
+              <li>
+                <a href="https://github.com/midexol/harbor" target="_blank" rel="noreferrer" style={{ color: COLORS.brass, textDecoration: 'none' }}>
+                  GitHub Repository →
+                </a>
+              </li>
+              <li>
+                <a href="https://soroban.stellar.org/" target="_blank" rel="noreferrer" style={{ color: COLORS.brass, textDecoration: 'none' }}>
+                  Stellar Soroban Documentation →
+                </a>
+              </li>
+              <li>
+                <a href="https://www.freighter.app/" target="_blank" rel="noreferrer" style={{ color: COLORS.brass, textDecoration: 'none' }}>
+                  Freighter Wallet Portal →
+                </a>
+              </li>
+            </ul>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ padding: '48px 40px' }}>
+        <div
+          className="harbor-mono"
+          style={{ color: COLORS.brass, fontSize: '11px', textTransform: 'uppercase', letterSpacing: "0.12em", marginBottom: '12px', fontWeight: '700' }}
+        >
+          {meta.subtitle}
+        </div>
+        <h2
+          className="harbor-display"
+          style={{ color: COLORS.textPrimary, fontSize: '32px', fontWeight: 500, marginBottom: '24px' }}
+        >
+          {active}
+        </h2>
+
+        <div style={{ marginBottom: '40px' }}>
+          {renderContent()}
+        </div>
+
+        {meta.next && (
+          <div
+            style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: '24px', marginTop: '40px' }}
+          >
+            <div
+              className="harbor-mono"
+              style={{ color: COLORS.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: "0.15em", marginBottom: '8px', fontWeight: '600' }}
+            >
+              Next
+            </div>
+            <button 
+              onClick={() => onSelect(meta.next!)}
+              className="harbor-body" 
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: COLORS.brass, 
+                fontSize: '14px', 
+                fontWeight: '600',
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              {meta.next} →
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function HarborLanding() {
   // Animated Count-Up state for Fee Leakage comparison
   const [lossAmount, setLossAmount] = useState(0);
@@ -13,6 +579,9 @@ export default function HarborLanding() {
 
   // Active step reveal state
   const [activeStep, setActiveStep] = useState(1);
+
+  // Active docs specification section state
+  const [activeDoc, setActiveDoc] = useState("Abstract");
 
   useEffect(() => {
     // Count up animation logic
@@ -85,6 +654,7 @@ export default function HarborLanding() {
         <nav style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
           <a href="#how-it-works" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>How It Works</a>
           <a href="#pricing" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>Pricing</a>
+          <a href="#docs" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>Technical Spec</a>
           <a href="#faq" style={{ fontSize: '13.5px', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: '600' }}>FAQ</a>
         </nav>
 
@@ -271,7 +841,7 @@ export default function HarborLanding() {
         </div>
       </section>
 
-      {/* 4-Step Process Section (Visually matching dashboard stepper) */}
+      {/* 4-Step Process Section */}
       <section id="how-it-works" style={{ 
         maxWidth: '1100px', 
         margin: '0 auto 100px', 
@@ -428,6 +998,42 @@ export default function HarborLanding() {
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* Redesigned Interactive Technical Spec Explorer Section */}
+      <section id="docs" style={{ 
+        maxWidth: '1100px', 
+        margin: '0 auto 100px', 
+        padding: '0 24px',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: '700', letterSpacing: '-0.5px' }}>
+            Technical Specification
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginTop: '8px' }}>
+            Explore our on-chain architecture, Soroban contracts, and security mitigations.
+          </p>
+        </div>
+
+        <div
+          style={{ 
+            width: '100%', 
+            display: 'flex', 
+            borderRadius: '12px',
+            border: `1px solid ${COLORS.border}`,
+            background: COLORS.bg, 
+            minHeight: '600px',
+            color: COLORS.textPrimary,
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-md)'
+          }}
+        >
+          {FONTS}
+          <Sidebar active={activeDoc} onSelect={setActiveDoc} />
+          <ContentArea active={activeDoc} onSelect={setActiveDoc} />
         </div>
       </section>
 

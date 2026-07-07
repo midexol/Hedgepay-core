@@ -236,10 +236,21 @@ export default function HarborOverview() {
         </div>
       )}
 
-      {/* Stepper Pipeline (Assurance Tracker) */}
-      {loading && (
-        <div className="glass-panel" style={{ padding: '20px 24px', marginBottom: '32px' }}>
-          <div className="stepper">
+      {/* Stepper Pipeline (Assurance Tracker) & Dynamic On-Chain Flow Map */}
+      {activeStep > 0 && (
+        <div className="glass-panel" style={{ padding: '24px', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-gold)', letterSpacing: '1px' }}>
+              ROUTING SEQUENCE ASSURANCE
+            </span>
+            {loading && (
+              <span className="harbor-mono" style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="pulse-dot"></span> Processing On-Chain...
+              </span>
+            )}
+          </div>
+
+          <div className="stepper" style={{ marginBottom: '24px' }}>
             <div className={`step-item ${activeStep >= 1 ? 'active' : ''} ${activeStep > 1 ? 'completed' : ''}`}>
               <div className="step-node">{activeStep > 1 ? '✓' : '1'}</div>
               <span className="step-label">ACH Detected</span>
@@ -253,9 +264,61 @@ export default function HarborOverview() {
               <span className="step-label">Split Routing</span>
             </div>
             <div className={`step-item ${activeStep >= 4 ? 'active' : ''}`}>
-              <div className="step-node">4</div>
+              <div className="step-node">{activeStep === 4 ? '✓' : '4'}</div>
               <span className="step-label">Paid Locally</span>
             </div>
+          </div>
+
+          {/* Interactive Routing Flow SVG */}
+          <div style={{ background: 'var(--bg-primary)', borderRadius: '8px', padding: '16px', border: '1px solid var(--border-light)', position: 'relative', overflow: 'hidden' }}>
+            <svg width="100%" height="110" viewBox="0 0 600 110" preserveAspectRatio="xMidYMid meet">
+              {/* Connector Lines */}
+              <line 
+                x1="80" y1="55" x2="250" y2="55" 
+                stroke={activeStep >= 2 ? 'var(--color-gold)' : 'var(--border-light)'} 
+                strokeWidth="2" 
+                strokeDasharray={activeStep === 1 ? '5,5' : 'none'}
+                style={{ transition: 'all 0.5s', animation: activeStep === 1 ? 'dash 1s linear infinite' : 'none' }}
+              />
+              <path 
+                d="M 270,55 L 450,25" 
+                fill="none" 
+                stroke={activeStep >= 3 ? 'var(--color-gold)' : 'var(--border-light)'} 
+                strokeWidth="2"
+                strokeDasharray={activeStep === 2 ? '5,5' : 'none'}
+                style={{ transition: 'all 0.5s', animation: activeStep === 2 ? 'dash 1s linear infinite' : 'none' }}
+              />
+              <path 
+                d="M 270,55 L 450,85" 
+                fill="none" 
+                stroke={activeStep >= 3 ? 'var(--color-success)' : 'var(--border-light)'} 
+                strokeWidth="2"
+                strokeDasharray={activeStep === 2 ? '5,5' : 'none'}
+                style={{ transition: 'all 0.5s', animation: activeStep === 2 ? 'dash 1s linear infinite' : 'none' }}
+              />
+
+              {/* Node A: Employer USD */}
+              <circle cx="80" cy="55" r="18" fill="var(--bg-panel)" stroke={activeStep >= 1 ? 'var(--color-gold)' : 'var(--border-light)'} strokeWidth="2" style={{ transition: 'all 0.5s' }} />
+              <text x="80" y="59" textAnchor="middle" fill={activeStep >= 1 ? 'var(--text-primary)' : 'var(--text-secondary)'} fontSize="10" fontWeight="bold" fontFamily="sans-serif">USD</text>
+
+              {/* Node B: Soroban Smart Contract */}
+              <circle cx="260" cy="55" r="18" fill="var(--bg-panel)" stroke={activeStep >= 2 ? 'var(--color-gold)' : 'var(--border-light)'} strokeWidth="2" style={{ transition: 'all 0.5s' }} />
+              <text x="260" y="59" textAnchor="middle" fill={activeStep >= 2 ? 'var(--text-primary)' : 'var(--text-secondary)'} fontSize="10" fontWeight="bold" fontFamily="sans-serif">RUST</text>
+
+              {/* Node C: Yield Vault */}
+              <circle cx="460" cy="25" r="18" fill="var(--bg-panel)" stroke={activeStep >= 3 ? 'var(--color-gold)' : 'var(--border-light)'} strokeWidth="2" style={{ transition: 'all 0.5s' }} />
+              <text x="460" y="29" textAnchor="middle" fill={activeStep >= 3 ? 'var(--color-gold)' : 'var(--text-secondary)'} fontSize="9" fontWeight="bold" fontFamily="sans-serif">YIELD</text>
+
+              {/* Node D: Payout e-wallet */}
+              <circle cx="460" cy="85" r="18" fill="var(--bg-panel)" stroke={activeStep >= 4 ? 'var(--color-success)' : 'var(--border-light)'} strokeWidth="2" style={{ transition: 'all 0.5s' }} />
+              <text x="460" y="89" textAnchor="middle" fill={activeStep >= 4 ? 'var(--color-success)' : 'var(--text-secondary)'} fontSize="9" fontWeight="bold" fontFamily="sans-serif">{selectedCorridor.toUpperCase()}</text>
+
+              {/* Node Labels */}
+              <text x="80" y="88" textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="sans-serif">ACH Wire</text>
+              <text x="260" y="88" textAnchor="middle" fill="var(--text-secondary)" fontSize="9" fontFamily="sans-serif">Soroban Contract</text>
+              <text x="500" y="29" textAnchor="start" fill="var(--text-secondary)" fontSize="9" fontFamily="sans-serif">30% Vault Escrow</text>
+              <text x="500" y="89" textAnchor="start" fill="var(--text-secondary)" fontSize="9" fontFamily="sans-serif">70% Local cash-out</text>
+            </svg>
           </div>
         </div>
       )}
@@ -271,18 +334,18 @@ export default function HarborOverview() {
             <h2 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-primary)' }}>
               US Routing Gateway
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1.5fr', gap: '20px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1.5fr', gap: '20px', background: 'var(--bg-primary)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
               <div>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>ROUTING NUMBER</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px' }}>110000000</span>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600', marginBottom: '4px' }}>ROUTING NUMBER</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>110000000</span>
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>ACCOUNT NUMBER</span>
-                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px' }}>1208947653</span>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600', marginBottom: '4px' }}>ACCOUNT NUMBER</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '14px', color: 'var(--text-primary)' }}>1208947653</span>
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600' }}>TYPE</span>
-                <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-blue)' }}>ACH / Direct Deposit</span>
+                <span style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'block', fontWeight: '600', marginBottom: '4px' }}>TYPE</span>
+                <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-gold)' }}>ACH / Direct Deposit</span>
               </div>
             </div>
             <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '16px', lineHeight: '1.5' }}>
