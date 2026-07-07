@@ -69,24 +69,30 @@ export default function HarborOverview() {
 
   const connectWallet = async () => {
     try {
-      const connected = typeof window !== 'undefined' && await isConnected();
-      if (connected) {
+      // Check if Freighter extension is active in window
+      const isInstalled = typeof window !== 'undefined' && 
+        (!!(window as any).stellarWebKit || !!(window as any).freighter || await isConnected());
+
+      if (isInstalled) {
+        setStatus({ type: 'info', message: "Triggering Freighter wallet authorization popup..." });
         const pubKey = await getPublicKey();
         if (pubKey) {
           setPublicKey(pubKey);
           setWalletConnected(true);
-          setStatus({ type: 'success', message: "Freelancer Wallet connected successfully via Freighter." });
-          return;
+          setStatus({ type: 'success', message: `Freelancer Wallet connected successfully: ${pubKey.slice(0, 6)}...${pubKey.slice(-4)}` });
+        } else {
+          setStatus({ type: 'error', message: "Freighter returned an empty key. Please unlock the extension and approve the connection request." });
         }
+        return;
       }
-      // Connect mock sandbox address if extension is missing/locked
+
+      // Connect sandbox demo if extension is completely missing
       setPublicKey("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
       setWalletConnected(true);
-      setStatus({ type: 'success', message: "Freighter not detected. Connected Sandbox Demo Wallet successfully." });
+      setStatus({ type: 'success', message: "Freighter extension not detected in browser. Connected Sandbox Demo Wallet successfully." });
     } catch (e) {
-      setPublicKey("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
-      setWalletConnected(true);
-      setStatus({ type: 'success', message: "Freighter not detected. Connected Sandbox Demo Wallet successfully." });
+      console.error(e);
+      setStatus({ type: 'error', message: "Freighter authorization failed. Please unlock your wallet extension and approve the connection request." });
     }
   };
 

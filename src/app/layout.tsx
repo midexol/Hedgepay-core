@@ -40,19 +40,25 @@ export default function RootLayout({
 
   const handleSidebarConnect = async () => {
     try {
-      // Direct check if Freighter extension is loaded
-      const connected = typeof window !== 'undefined' && await isConnected();
-      if (connected) {
+      // Check if Freighter extension is active in window
+      const isInstalled = typeof window !== 'undefined' && 
+        (!!(window as any).stellarWebKit || !!(window as any).freighter || await isConnected());
+      
+      if (isInstalled) {
         const pubKey = await getPublicKey();
         if (pubKey) {
           setWalletAddress(pubKey);
           return;
+        } else {
+          alert("Freighter wallet is locked or connection was rejected. Please unlock Freighter and approve the connection request.");
+          return;
         }
       }
-      // Connect fallback mock wallet if extension not active
+      
+      // Only fallback to demo if the extension is completely missing
       setWalletAddress("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
     } catch (e) {
-      console.warn("Freighter connection failed. Fallback to Sandbox Demo Wallet.", e);
+      console.warn("Freighter connection failed.", e);
       setWalletAddress("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
     }
   };
