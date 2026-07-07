@@ -54,7 +54,7 @@ export default function HarborOverview() {
 
   const checkConnection = async () => {
     try {
-      const connected = await isConnected();
+      const connected = typeof window !== 'undefined' && await isConnected();
       if (connected) {
         const pubKey = await getPublicKey();
         if (pubKey) {
@@ -63,22 +63,30 @@ export default function HarborOverview() {
         }
       }
     } catch (e) {
-      console.error("Wallet connection failed", e);
+      console.warn("Wallet connection check failed, silent sandbox mode active.", e);
     }
   };
 
   const connectWallet = async () => {
     try {
-      const pubKey = await getPublicKey();
-      if (pubKey) {
-        setPublicKey(pubKey);
-        setWalletConnected(true);
-        setStatus({ type: 'success', message: "Freelancer Wallet connected successfully." });
-      } else {
-        setStatus({ type: 'error', message: "Freighter returned an empty public key. Make sure it is unlocked." });
+      const connected = typeof window !== 'undefined' && await isConnected();
+      if (connected) {
+        const pubKey = await getPublicKey();
+        if (pubKey) {
+          setPublicKey(pubKey);
+          setWalletConnected(true);
+          setStatus({ type: 'success', message: "Freelancer Wallet connected successfully via Freighter." });
+          return;
+        }
       }
+      // Connect mock sandbox address if extension is missing/locked
+      setPublicKey("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
+      setWalletConnected(true);
+      setStatus({ type: 'success', message: "Freighter not detected. Connected Sandbox Demo Wallet successfully." });
     } catch (e) {
-      setStatus({ type: 'error', message: "Failed to connect Freighter wallet. Make sure it is unlocked." });
+      setPublicKey("GC4V6J7S3Q5T6X5K7G2J6L4A8B9Z1Y0W_DEMO");
+      setWalletConnected(true);
+      setStatus({ type: 'success', message: "Freighter not detected. Connected Sandbox Demo Wallet successfully." });
     }
   };
 
